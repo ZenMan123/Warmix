@@ -6,19 +6,19 @@ from typing import List, Dict, Tuple
 
 
 class Warrior(pygame.sprite.Sprite):
-    def __init__(self, warrior_name: str, init_side: str = 'right'):
+    def __init__(self, warrior_name: str, camera, init_side: str = 'right'):
         super(Warrior, self).__init__()
 
         self.warrior_name = warrior_name
         self.current_directory = f'Warriors/{self.warrior_name}'
         self.last_side = init_side
+        self.camera = camera
 
         self._load_features_data()
         self.conditions = {
             'attack': {
                 'status': False,
                 'func': self._attack,
-                'moves_left': ATTACK_COUNT
             },
             'jump': {
                 'jumping_count': JUMPING_COUNT,
@@ -32,6 +32,20 @@ class Warrior(pygame.sprite.Sprite):
             'die': {
                 'status': False,
                 'func': None
+            },
+            'walk': {
+                'directions': set(),
+                'func': self._walk,
+                'status': False
+            },
+            'run': {
+                'directions': set(),
+                'func': self._run,
+                'status': False
+            },
+            'idle': {
+                'func': self._idle,
+                'status': True
             }
 
         }
@@ -83,10 +97,6 @@ class Warrior(pygame.sprite.Sprite):
         self.rect: pygame.Rect = self.image.get_rect()
         self.rect.x, self.rect.y = 0, HEIGHT - self.rect.height
 
-    def _update_image(self, mode: str, side: str) -> None:
-        self.mode_to_frame_number[side][mode] = (self.mode_to_frame_number[side][mode] + 1) % 7
-        self.image = self.mode_to_images[side][mode][self.mode_to_frame_number[side][mode]]
-
     def _load_features_data(self):
         with open(f'{self.current_directory}/features.json') as data:
             self.data = load(data)
@@ -102,24 +112,23 @@ class Warrior(pygame.sprite.Sprite):
                     for i in sorted(listdir(temp_directory))]
                 self.mode_to_images[side][mode] = loaded_images
 
-    def _update_coord_x(self, mode: str, side: str):
-        self.last_side = side
-        if side == 'left' and self.rect.x > 5:
-            if mode == 'run':
-                self.rect.x -= RUNNING_SPEED
-            if mode == 'walk':
-                self.rect.x -= WALKING_SPEED
-        if side == 'right' and self.rect.x < WIDTH - 5 - WARRIOR_WIDTH:
-            if mode == 'run':
-                self.rect.x += RUNNING_SPEED
-            if mode == 'walk':
-                self.rect.x += WALKING_SPEED
+    def _walk(self):
+        if self.last_side == 'left' and self.rect.x > WALKING_SPEED:
+            self.rect.x -= WALKING_SPEED
+        if self.last_side == 'right' and self.rect.x < WIDTH - WARRIOR_WIDTH - WALKING_SPEED:
+            self.rect.x += WALKING_SPEED
+
+    def _run(self):
+        if self.last_side == 'left' and self.rect.x > RUNNING_SPEED:
+            self.rect.x -= RUNNING_SPEED
+        if self.last_side == 'right' and self.rect.x < WIDTH - WARRIOR_WIDTH - RUNNING_SPEED:
+            self.rect.x += RUNNING_SPEED
 
     def _jump(self):
         jumping_count = self.conditions['jump']['jumping_count']
 
         if jumping_count == -(JUMPING_COUNT + 1):
-            self.conditions['jump']['status'] = False
+            self.deactivate('jump')
             self.conditions['jump']['jumping_count'] = JUMPING_COUNT
             return
 
@@ -128,24 +137,51 @@ class Warrior(pygame.sprite.Sprite):
         self.conditions['jump']['jumping_count'] -= 1
 
     def _attack(self):
-        moves_left = self.conditions['attack']['moves_left']
+        pass
 
-        if moves_left <= 0:
-            self.conditions['attack']['status'] = False
-            self.conditions['attack']['moves_left'] = ATTACK_COUNT
+    def _idle(self):
+        pass
 
-        self.conditions['attack']['moves_left'] -= 1
+    def activate(self, mode, direction=None):
+        self.conditions[mode]['status'] = True
+        if direction:
+            self.conditions[mode]['directions'].add(direction)
 
-    def update(self, mode: str, side: str) -> None:
-        if mode in self.conditions.keys():
-            if not self.conditions[mode]['status']:
-                self.conditions[mode]['status'] = True
-        for temp_mode in self.conditions.keys():
-            if self.conditions[temp_mode]['status']:
-                self.conditions[temp_mode]['func']()
+    def change_last_side(self, pos):
+        delta_x, delta_y = self.camera.get_delta()
+        if pos[0] - delta_x <= self.rect.x + WARRIOR_WIDTH / 2:
+            self.last_side = 'left'
+        else:
+            self.last_side = 'right'
 
-        self._update_image(mode, side)
-        self._update_coord_x(mode, side)
+    def deactivate(self, mode, direction=None):
+        if direction:
+            self.conditions[mode]['directions'].remove(direction)
+            if not self.conditions[mode]['directions']:
+                self.conditions[mode]['status'] = False
+            else:
+                self.last_side = list(self.conditions[mode]['directions'])[0]
+        else:
+            self.conditions[mode]['status'] = False
+
+    def update(self) -> None:
+        modes = list()
+        for mode in self.conditions.keys():
+            if self.conditions[mode]['status']:
+                if (mode == 'run' and self.check_for('walk')) or (mode != 'run'):
+                    self.conditions[mode]['func']()
+                    modes.append(mode)
+
+        mode = sorted(modes, key=lambda x: MODE_IMPORTANCE[x], reverse=True)[0]
+        self._update_image(mode)
+        self.camera.update(self)
+
+    def check_for(self, *modes):
+        return any(self.conditions[mode]['status'] for mode in modes)
+
+    def _update_image(self, mode: str) -> None:
+        self.mode_to_frame_number[self.last_side][mode] = (self.mode_to_frame_number[self.last_side][mode] + 1) % 7
+        self.image = self.mode_to_images[self.last_side][mode][self.mode_to_frame_number[self.last_side][mode]]
 
     @staticmethod
     def _transform_warrior_image(image: pygame.Surface) -> pygame.Surface:

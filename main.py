@@ -1,7 +1,9 @@
 from Game import Game
 from Warrior import Warrior
+from Camera import Camera
 import pygame
-from configurations import SIZE, FPS
+from configurations import SCREEN_SIZE, FPS, SIZE
+from pprint import pprint
 
 
 def catch_events(keys, pressed, pos):
@@ -12,6 +14,7 @@ def catch_events(keys, pressed, pos):
         return
 
     if keys[pygame.K_SPACE] and not w1.conditions['jump']['status']:
+        print('here')
         w1.update('jump', w1.last_side)
     if keys[pygame.K_a] and keys[pygame.K_LSHIFT]:
         w1.update('run', 'left')
@@ -25,14 +28,16 @@ def catch_events(keys, pressed, pos):
         w1.update('idle', w1.last_side)
 
 
-screen = pygame.display.set_mode(SIZE)
+screen = pygame.display.set_mode(SCREEN_SIZE)
 clock = pygame.time.Clock()
+camera = Camera(*SIZE)
 
 warriors1 = pygame.sprite.Group()
-w1 = Warrior('1')
+w1 = Warrior('1', camera)
 warriors1.add(w1)
 
-game = Game('base.png', warriors1, pygame.sprite.Group(), screen)
+
+game = Game(warriors1, pygame.sprite.Group(), camera, screen)
 game.draw()
 
 running = True
@@ -41,14 +46,33 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    keys = pygame.key.get_pressed()
-    pressed = pygame.mouse.get_pressed()
-    pos = pygame.mouse.get_pos()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_a:
+                w1.activate('walk', 'left')
+                w1.last_side = 'left'
+            if event.key == pygame.K_d:
+                w1.activate('walk', 'right')
+                w1.last_side = 'right'
+            if event.key == pygame.K_LSHIFT:
+                w1.activate('run')
+            if event.key == pygame.K_SPACE:
+                w1.activate('jump')
 
-    catch_events(keys, pressed, pos)
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            w1.activate('attack')
+            w1.change_last_side(event.pos)
 
+        if event.type == pygame.MOUSEBUTTONUP:
+            w1.deactivate('attack')
+
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_LSHIFT:
+                w1.deactivate('run')
+            if event.key == pygame.K_a:
+                w1.deactivate('walk', 'left')
+            if event.key == pygame.K_d:
+                w1.deactivate('walk', 'right')
+
+    w1.update()
     game.draw()
     clock.tick(FPS)
-
-
-

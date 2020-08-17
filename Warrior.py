@@ -1,7 +1,7 @@
 import pygame
 from os import listdir
 from json import load
-from configurations import WARRIOR_WIDTH, WIDTH, HEIGHT, WARRIOR_HEIGHT
+from configurations import *
 from typing import List, Dict, Tuple
 
 
@@ -14,6 +14,27 @@ class Warrior(pygame.sprite.Sprite):
         self.last_side = init_side
 
         self._load_features_data()
+        self.conditions = {
+            'attack': {
+                'status': False,
+                'func': self._attack,
+                'moves_left': ATTACK_COUNT
+            },
+            'jump': {
+                'jumping_count': JUMPING_COUNT,
+                'status': False,
+                'func': self._jump
+            },
+            'hurt': {
+                'status': False,
+                'func': None
+            },
+            'die': {
+                'status': False,
+                'func': None
+            }
+
+        }
 
         self.mode_to_images: Dict[str, Dict[str, List[pygame.Surface]]] = {
             'left': {
@@ -81,22 +102,50 @@ class Warrior(pygame.sprite.Sprite):
                     for i in sorted(listdir(temp_directory))]
                 self.mode_to_images[side][mode] = loaded_images
 
-    def _update_coord(self, mode: str, side: str):
+    def _update_coord_x(self, mode: str, side: str):
         self.last_side = side
         if side == 'left' and self.rect.x > 5:
             if mode == 'run':
-                self.rect.x -= 5
+                self.rect.x -= RUNNING_SPEED
             if mode == 'walk':
-                self.rect.x -= 2
+                self.rect.x -= WALKING_SPEED
         if side == 'right' and self.rect.x < WIDTH - 5 - WARRIOR_WIDTH:
             if mode == 'run':
-                self.rect.x += 5
+                self.rect.x += RUNNING_SPEED
             if mode == 'walk':
-                self.rect.x += 2
+                self.rect.x += WALKING_SPEED
+
+    def _jump(self):
+        jumping_count = self.conditions['jump']['jumping_count']
+
+        if jumping_count == -(JUMPING_COUNT + 1):
+            self.conditions['jump']['status'] = False
+            self.conditions['jump']['jumping_count'] = JUMPING_COUNT
+            return
+
+        sign = 1 if jumping_count >= 0 else -1
+        self.rect.y -= round((jumping_count ** 2) * JUMPING_K * sign)
+        self.conditions['jump']['jumping_count'] -= 1
+
+    def _attack(self):
+        moves_left = self.conditions['attack']['moves_left']
+
+        if moves_left <= 0:
+            self.conditions['attack']['status'] = False
+            self.conditions['attack']['moves_left'] = ATTACK_COUNT
+
+        self.conditions['attack']['moves_left'] -= 1
 
     def update(self, mode: str, side: str) -> None:
+        if mode in self.conditions.keys():
+            if not self.conditions[mode]['status']:
+                self.conditions[mode]['status'] = True
+        for temp_mode in self.conditions.keys():
+            if self.conditions[temp_mode]['status']:
+                self.conditions[temp_mode]['func']()
+
         self._update_image(mode, side)
-        self._update_coord(mode, side)
+        self._update_coord_x(mode, side)
 
     @staticmethod
     def _transform_warrior_image(image: pygame.Surface) -> pygame.Surface:
@@ -104,5 +153,5 @@ class Warrior(pygame.sprite.Sprite):
 
     def __str__(self):
         result = [f'<Warrior> {self.warrior_name}', f'Здоровье: {self.health}, Урон: {self.power}',
-                  f'Позиция: {self.position}']
+                  f'Позиция: {self.rect.x, self.rect.y}']
         return '\n'.join(result)

@@ -14,7 +14,7 @@ class Warrior(pygame.sprite.Sprite):
         self.current_directory = f'Warriors/{self.warrior_name}'
         self.last_side = init_side
         self.camera = camera
-        self.textures = None
+        self.game = None
 
         self._load_features_data()
         self.conditions = {
@@ -25,7 +25,8 @@ class Warrior(pygame.sprite.Sprite):
             'jump': {
                 'jumping_count': JUMPING_COUNT,
                 'status': False,
-                'func': self._jump
+                'func': self._jump,
+                'just_finished': False,
             },
             'hurt': {
                 'status': False,
@@ -49,11 +50,15 @@ class Warrior(pygame.sprite.Sprite):
                 'func': self._idle,
                 'status': True
             },
-            # 'fall': {
-            #     'func': self._fall,
-            #     'status': True,
-            #     'falling_speed': FALLING_ACCELERATION
-            # }
+            'fall': {
+                'func': self._fall,
+                'status': False,
+                'falling_speed': FALLING_ACCELERATION
+            },
+            'collect': {
+                'func': self._collect,
+                'status': False
+            }
         }
 
         self.mode_to_images: Dict[str, Dict[str, List[pygame.Surface]]] = {
@@ -103,9 +108,6 @@ class Warrior(pygame.sprite.Sprite):
         self.rect: pygame.Rect = self.image.get_rect()
         self.rect.x, self.rect.y = PART_OF_MAP_WIDTH, HEIGHT - self.rect.height - PART_OF_MAP_HEIGHT
 
-    def set_textures(self, group: pygame.sprite.Group):
-        self.textures = group
-
     def _load_features_data(self):
         with open(f'{self.current_directory}/features.json') as data:
             self.data = load(data)
@@ -135,37 +137,39 @@ class Warrior(pygame.sprite.Sprite):
         if self.last_side == 'right':
             self.rect.x += RUNNING_SPEED * reverse
 
-    # def _fall(self, collided_object=None):
-    #     if collided_object:
-    #         self.rect.y = collided_object.rect.y + self.rect.height
-    #         self.deactivate('fall', features_dict={'falling_speed': FALLING_ACCELERATION})
-    #         return
-    #     falling_speed = self.conditions['fall']['falling_speed']
-    #     if self.rect.y + falling_speed >= HEIGHT - self.rect.height - PART_OF_MAP_HEIGHT:
-    #         self.rect.y = HEIGHT - self.rect.height - PART_OF_MAP_HEIGHT
-    #         self.conditions['fall']['falling_speed'] = FALLING_ACCELERATION
-    #     else:
-    #         self.rect.y += falling_speed
-    #         self.conditions['fall']['falling_speed'] += FALLING_ACCELERATION
+    def _fall(self, collided_object=None):
+        falling_speed = self.conditions['fall']['falling_speed']
+
+        if collided_object:
+            self.rect.y = collided_object.rect.y - self.rect.height
+            self.deactivate('fall', features_dict={'falling_speed': FALLING_ACCELERATION})
+            self.reduce_health_from_falling(falling_speed)
+        elif self.rect.y + falling_speed >= HEIGHT - self.rect.height - PART_OF_MAP_HEIGHT:
+            self.rect.y = HEIGHT - self.rect.height - PART_OF_MAP_HEIGHT
+            self.reduce_health_from_falling(falling_speed)
+            self.deactivate('fall', features_dict={'falling_speed': FALLING_ACCELERATION})
+        else:
+            self.rect.y += falling_speed
+            self.conditions['fall']['falling_speed'] += FALLING_ACCELERATION
 
     def _jump(self, collided_object: pygame.sprite.Sprite = None):
-
         jumping_count = self.conditions['jump']['jumping_count']
-
         if jumping_count <= -(JUMPING_COUNT + 1):
-            self.deactivate('jump', direction=None, features_dict={'jumping_count': JUMPING_COUNT})
+            self.deactivate('jump', features_dict={'jumping_count': JUMPING_COUNT,
+                                                   'just_finished': True})
             return
 
         if collided_object:
             if collided_object.rect.y < self.rect.y:
                 self.rect.y += round((jumping_count + 1) ** 2 * JUMPING_K)
-                # self.rect.y = collided_object.rect.y + collided_object.rect.height + 1
-                self.conditions['jump']['jumping_count'] = jumping_count = -(jumping_count + 2)
+                self.conditions['jump']['jumping_count'] = jumping_count = -1
                 if jumping_count <= -(JUMPING_COUNT + 1):
-                    self.deactivate('jump', direction=None, features_dict={'jumping_count': JUMPING_COUNT})
+                    self.deactivate('jump', features_dict={'jumping_count': JUMPING_COUNT,
+                                                           'just_finished': True})
                     return
             else:
-                self.deactivate('jump', direction=None, features_dict={'jumping_count': JUMPING_COUNT})
+                self.deactivate('jump', features_dict={'jumping_count': JUMPING_COUNT,
+                                                       'just_finished': True})
                 self.rect.y = collided_object.rect.y - self.rect.height
                 return
 
@@ -178,6 +182,24 @@ class Warrior(pygame.sprite.Sprite):
 
     def _idle(self, collided_object=None):
         pass
+
+    def _collect(self, collided_object:pygame.sprite.Sprite = None):
+        if collided_object and collided_object.is_icon():
+            if collided_object.get_icon_type() == 'apple':
+                self.health = min(self.health + 20, self.data['health'] * 2)
+            if collided_object.get_icon_type() == 'potion':
+                self.power = min(self.power + 5, self.data['power'] * 2)
+            if collided_object.get_icon_type() == 'power':
+                self.power = min(self.power + 10, self.data['power'] * 2)
+            if collided_object.get_icon_type() == 'shield':
+                self.health = min(self.health + 50, self.data['health'] * 2)
+            collided_object.kill()
+        self.deactivate('collect')
+
+    def reduce_health_from_falling(self, falling_speed):
+        if falling_speed <= 70:
+            return
+        self.health -= (falling_speed - 50) // 2
 
     def activate(self, mode, direction=None):
         self.conditions[mode]['status'] = True
@@ -208,19 +230,22 @@ class Warrior(pygame.sprite.Sprite):
         modes = list()
         for mode in self.conditions.keys():
             if self.conditions[mode]['status']:
+                if mode == 'jump' and self.conditions['fall']['status']:
+                    self.conditions['jump']['status'] = False
+                    continue
+                if mode == 'collect':
+                    icons_res = pygame.sprite.spritecollide(self, self.game.map_icons_group, False)
+                    if icons_res:
+                        self.conditions[mode]['func'](collided_object=icons_res[0])
                 if (mode == 'run' and self.check_for('walk')) or (mode != 'run'):
                     self.conditions[mode]['func']()
-                    res = pygame.sprite.spritecollide(self, self.textures, False)
-                    if res:
-                        self.conditions[mode]['func'](collided_object=res[0])
+                    obstacle_res = pygame.sprite.spritecollide(self, self.game.map_obstacles_group, False)
+                    if obstacle_res:
+                        self.conditions[mode]['func'](collided_object=obstacle_res[0])
                     modes.append(mode)
-        # self.rect.y += 1
-        # if pygame.sprite.spritecollide(self, self.textures, False) or self.conditions['jump']['status']:
-        #     self.rect.y -= 1
-        #     print('Deactivated')
-        # else:
-        #     print('Activated')
-        #     self.conditions['fall']['status'] = True
+
+        self.check_for_falling()
+        self.conditions['jump']['just_finished'] = False
 
         mode = sorted(modes, key=lambda x: MODE_IMPORTANCE[x], reverse=True)[0]
         self._update_image(mode)
@@ -228,6 +253,16 @@ class Warrior(pygame.sprite.Sprite):
 
     def check_for(self, *modes):
         return any(self.conditions[mode]['status'] for mode in modes)
+
+    def check_for_falling(self):
+        self.rect.y += 1
+        if pygame.sprite.spritecollide(self, self.game.map_obstacles_group, False) or self.conditions['jump']['status']:
+            self.rect.y -= 1
+        else:
+            self.rect.y -= 1
+            if self.conditions['jump']['just_finished']:
+                self.conditions['fall']['falling_speed'] = round(JUMPING_COUNT ** 2 * JUMPING_K)
+            self.conditions['fall']['status'] = True
 
     def _update_image(self, mode: str) -> None:
         if mode == 'fall':

@@ -1,31 +1,9 @@
-from Game import Game
-from Warrior import Warrior
-from Camera import Camera
+from game import Game
+from warrior import Warrior
+from camera import Camera
 import pygame
 from configurations import SCREEN_SIZE, FPS, SIZE
 from pprint import pprint
-
-
-def catch_events(keys, pressed, pos):
-    if pressed[0] or w1.conditions['attack']['status']:
-        if pressed[0]:
-            w1.last_side = 'left' if pos[0] < w1.rect.x + w1.rect.width // 2 else 'right'
-        w1.update('attack', w1.last_side)
-        return
-
-    if keys[pygame.K_SPACE] and not w1.conditions['jump']['status']:
-        print('here')
-        w1.update('jump', w1.last_side)
-    if keys[pygame.K_a] and keys[pygame.K_LSHIFT]:
-        w1.update('run', 'left')
-    elif keys[pygame.K_d] and keys[pygame.K_LSHIFT]:
-        w1.update('run', 'right')
-    elif keys[pygame.K_a]:
-        w1.update('walk', 'left')
-    elif keys[pygame.K_d]:
-        w1.update('walk', 'right')
-    else:
-        w1.update('idle', w1.last_side)
 
 
 screen = pygame.display.set_mode(SCREEN_SIZE)
@@ -37,8 +15,10 @@ w1 = Warrior('1', camera)
 warriors1.add(w1)
 
 
-game = Game(warriors1, pygame.sprite.Group(), camera, screen)
+game = Game(warriors1, pygame.sprite.Group(), camera, screen, 1)
 game.draw()
+
+w1.set_textures(game.map_obstacles_group)
 
 running = True
 while running:

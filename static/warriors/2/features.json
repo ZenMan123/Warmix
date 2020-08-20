@@ -5,5 +5,8 @@
   "walking_speed": 5,
   "jumping_count": 18,
   "jumping_k": 0.2,
-  "falling_acceleration": 2
+  "falling_acceleration": 2,
+  "magazine_capacity": 6,
+  "reloading_speed": 2,
+  "bullet_speed": 30
 }

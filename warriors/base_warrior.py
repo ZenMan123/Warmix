@@ -184,12 +184,11 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
             sign = 1 if jumping_count >= 0 else -1
             self.rect.y -= round((jumping_count ** 2) * self.JUMPING_K) * sign
             self.conditions['jump']['jumping_count'] -= 1
-            print(self.rect.y, jumping_count)
 
     @abstractmethod
     def _attack(self) -> None:
         """Метод вызывается при атаке персонажа. Нуждается в переопределении в дочерних классах"""
-
+        self.deactivate('attack')
         pass
 
     def _idle(self) -> None:

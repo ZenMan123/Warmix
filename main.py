@@ -1,5 +1,7 @@
 from game.game import Game
-from warriors.melee_warrior import MeleeWarrior
+from screen_drawers.warrior_info import WarriorInfo
+from screen_drawers.drawer import Drawer
+from warriors.pistol_pirate import PistolPirate
 from services_for_game.camera import Camera
 import pygame
 from configurations.size_configurations import SCREEN_SIZE, FPS, SIZE
@@ -30,9 +32,6 @@ def main(warrior, game):
                 warrior.activate('attack')
                 warrior.change_last_side(event.pos)
 
-            if event.type == pygame.MOUSEBUTTONUP:
-                warrior.deactivate('attack')
-
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_q:
                     warrior.deactivate('run')
@@ -42,17 +41,18 @@ def main(warrior, game):
                     warrior.deactivate('walk', direction='right')
 
         warrior.update()
-        game.draw()
+        drawer.draw()
         clock.tick(FPS)
 
 
 screen = pygame.display.set_mode(SCREEN_SIZE)
 camera = Camera(*SIZE)
 
-warrior = MeleeWarrior('2', camera)
+warrior = PistolPirate('2', camera)
+warrior._reload_magazine()
+warrior_info = WarriorInfo(warrior)
+
 game = Game(warrior, pygame.sprite.Group(), camera, screen, 1)
+drawer = Drawer(screen, game, camera, warrior, warrior_info)
 
 main(warrior, game)
-
-
-

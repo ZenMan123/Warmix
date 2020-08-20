@@ -1,0 +1,9 @@
+{
+  "health": 120,
+  "power": 20,
+  "running_speed": 12,
+  "walking_speed": 4,
+  "jumping_count": 18,
+  "jumping_k": 0.2,
+  "falling_acceleration": 2
+}

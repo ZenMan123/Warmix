@@ -1,59 +1,58 @@
-from game import Game
-from warrior import Warrior
-from camera import Camera
+from game.game import Game
+from warriors.melee_warrior import MeleeWarrior
+from services_for_game.camera import Camera
 import pygame
-from configurations import SCREEN_SIZE, FPS, SIZE
-from time import sleep
+from configurations.size_configurations import SCREEN_SIZE, FPS, SIZE
+
+
+def main(warrior, game):
+    clock = pygame.time.Clock()
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_a:
+                    warrior.activate('walk', direction='left')
+                if event.key == pygame.K_d:
+                    warrior.activate('walk', direction='right')
+                if event.key == pygame.K_e:
+                    warrior.activate('collect')
+                if event.key == pygame.K_q:
+                    warrior.activate('run')
+                if event.key == pygame.K_SPACE:
+                    warrior.activate('jump')
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                warrior.activate('attack')
+                warrior.change_last_side(event.pos)
+
+            if event.type == pygame.MOUSEBUTTONUP:
+                warrior.deactivate('attack')
+
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_q:
+                    warrior.deactivate('run')
+                if event.key == pygame.K_a:
+                    warrior.deactivate('walk', direction='left')
+                if event.key == pygame.K_d:
+                    warrior.deactivate('walk', direction='right')
+
+        warrior.update()
+        game.draw()
+        clock.tick(FPS)
 
 
 screen = pygame.display.set_mode(SCREEN_SIZE)
-clock = pygame.time.Clock()
 camera = Camera(*SIZE)
 
-w1 = Warrior('1', camera)
+warrior = MeleeWarrior('2', camera)
+game = Game(warrior, pygame.sprite.Group(), camera, screen, 1)
 
-game = Game(w1, pygame.sprite.Group(), camera, screen, 2)
-game.draw()
+main(warrior, game)
 
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
 
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_a:
-                w1.activate('walk', direction='left')
-                w1.last_side = 'left'
-            if event.key == pygame.K_d:
-                w1.activate('walk', direction='right')
-                w1.last_side = 'right'
-            if event.key == pygame.K_e:
-                w1.activate('collect')
-            if event.key == pygame.K_q:
-                w1.activate('run')
-            if event.key == pygame.K_SPACE:
-                w1.activate('jump')
 
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            w1.activate('attack')
-            w1.change_last_side(event.pos)
-
-        if event.type == pygame.MOUSEBUTTONUP:
-            w1.deactivate('attack')
-
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_q:
-                w1.deactivate('run')
-            if event.key == pygame.K_a:
-                w1.deactivate('walk', direction='left')
-            if event.key == pygame.K_d:
-                w1.deactivate('walk', direction='right')
-
-    w1.update()
-    game.draw()
-    clock.tick(FPS)
-
-    if w1.health <= 0:
-        sleep(2)
-        break

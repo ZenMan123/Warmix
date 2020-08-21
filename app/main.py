@@ -59,7 +59,7 @@ game = Game(pygame.sprite.Group(), 1)
 second_warrior = MeleeWarrior('1', Camera(), game)
 main_warrior = PistolPirate('2', camera, game)
 
-main_warrior_info = BaseWarriorInfo(main_warrior)
+main_warrior_info = PistolWarriorInfo(main_warrior)
 
 drawer = Drawer(screen, game, camera, main_warrior, main_warrior_info)
 

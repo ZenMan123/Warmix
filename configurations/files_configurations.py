@@ -18,6 +18,7 @@ POTION_ICON_NAME = 'potion.png'
 SHIELD_ICON_NAME = 'shield.png'
 APPLE_ICON_NAME = 'apple.png'
 BULLET_ICON_NAME = 'bullet.png'
+RIP_ICON_NAME = 'rip.png'
 
 LEFT_BULLET_NAME = 'left_bullet.png'
 RIGHT_BULLET_NAME = 'right_bullet.png'
@@ -27,6 +28,10 @@ COLLECTING_SOUND_NAME = 'collecting.wav'
 HURTING_SOUND_NAME = 'hurting.wav'
 JUMPING_SOUND_NAME = 'jumping.wav'
 ATTACKING_SOUND_NAME = 'attacking.wav'
+BULLET_SHOOTING_NAME = 'bullet_shooting.wav'
+EMPTY_MAGAZINE_NAME = 'empty_magazine.wav'
+APPLE_EATING_NAME = 'apple_eating.wav'
+COLLECTING_SWORD_NAME = 'collect_sword.wav'
 
 
 def get_warrior_features_path(warrior_name: str) -> str:

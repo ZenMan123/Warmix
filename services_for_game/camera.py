@@ -1,5 +1,5 @@
 import pygame
-from configurations.size_configurations import SCREEN_WIDTH, SCREEN_HEIGHT
+from configurations.size_configurations import SCREEN_WIDTH, SCREEN_HEIGHT, SIZE
 
 
 def camera_configure(camera, target_rect):
@@ -17,9 +17,9 @@ def camera_configure(camera, target_rect):
 
 
 class Camera(object):
-    def __init__(self, width, height, camera_func=camera_configure):
+    def __init__(self, camera_func=camera_configure):
         self.camera_func = camera_func
-        self.state = pygame.Rect(0, 0, width, height)
+        self.state = pygame.Rect(0, 0, *SIZE)
 
     def apply(self, target):
         return target.rect.move(self.state.topleft)

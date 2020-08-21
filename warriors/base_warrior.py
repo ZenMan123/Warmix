@@ -1,24 +1,26 @@
 import pygame
 
-from configurations.files_configurations import *
-from configurations.modes_configuration import LEFT, RIGHT
-from configurations.size_configurations import PART_OF_MAP_HEIGHT, PART_OF_MAP_WIDTH, HEIGHT, WARRIOR_SIZE
+from game.game import Game
+from configurations.size_configurations import PART_OF_MAP_HEIGHT, PART_OF_MAP_WIDTH, HEIGHT, ANIMATIONS_COUNT
 
 from services_for_game.music import Music
 from services_for_game.camera import Camera
 from .service_funcs import *
+from map.tombstone import TombStone
 
 from abc import ABC, abstractmethod
 
 
 class BaseWarrior(ABC, pygame.sprite.Sprite):
-    def __init__(self, warrior_name: str, camera: Camera, init_side: str = 'right'):
+    def __init__(self, warrior_name: str, camera: Camera, game: Game, init_side: str = 'right'):
         super(BaseWarrior, self).__init__()
 
         self.warrior_name = warrior_name
         self.camera = camera
-        self.game = None
-        self.music = Music()
+        self.game = game
+
+        # Добавляем сеkбя в список воинов
+        self.game.warriors.add(self)
 
         # Загружаем информацию из json файлов о персонаже, а также анимации различных состояний
         load_features_data(self)
@@ -49,11 +51,13 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
             },
             'hurt': {
                 'status': False,
-                'func': None
+                'func': self._hurt,
+                'hurting_count': -1
             },
             'die': {
                 'status': False,
-                'func': None
+                'func': self._die,
+                'dying_count': -1
             },
             'walk': {
                 'directions': set(),
@@ -196,15 +200,36 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
 
         pass
 
+    def _die(self) -> None:
+        """Метод вызывается, когда здоровье персонажа становится неположительным.
+        Если состояние die активировано, то никакие другие состояния не будут действовать.
+        После исполнения анимации смерти, изображения героя сменится на значок могилы,
+        а сам герой будет уничтожен"""
+
+        if self.conditions['die']['dying_count'] == ANIMATIONS_COUNT - 1:
+            self.kill()
+            TombStone(self.rect, self.game)  # Создаём на нашем месте могилу
+        else:
+            self.conditions['die']['dying_count'] += 1
+
+    def _hurt(self) -> None:
+        """Метод вызывается когда игрок теряет здоровье от АТАКИ (не от падения),
+        так как это будет выглядеть не очень"""
+
+        if self.conditions['hurt']['hurting_count'] == ANIMATIONS_COUNT - 1:
+            self.deactivate('hurt', features_dict={'hurting_count': -1})
+        else:
+            self.conditions['hurt']['hurting_count'] += 1
+
     def _collect(self) -> None:
         """Метод активируется при сборе предметов. В случае, если рядом находится предмет, то
-        вызывается его функия, а затем он уничтожается"""
+        вызывается его функия и проигрывается мелодия, а затем он уничтожается"""
 
         res = self._near_with_items()
         if res:
             res[0].func(self)
+            res[0].sound()
             res[0].kill()
-            self.music.play_collecting_sound()
         self.deactivate('collect')
 
     def reduce_health_from_falling(self, falling_speed: int) -> None:
@@ -217,7 +242,7 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
         if falling_speed <= 70:
             return
         self.health -= (falling_speed - 70) // 2
-        self.music.play_hurting_sound()
+        Music().play_hurting_sound()
 
     def activate(self, mode: str, direction: str = None) -> None:
         """Активирует состояние. В случае передачи направления
@@ -291,17 +316,24 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
             self.conditions[mode][a] = b
 
     def update(self) -> None:
-        """Обновляет позицию персонажа исходя из активных состояний"""
+        """Обновляет позицию персонажа исходя из активных состояний.
+        В случае, если мы умираем, никакое состояние не исполняется"""
 
+        self.check_for_dying()  # Проверка на то, что мы умираем
         modes = []  # Здесь будет список активных состояний
-        for mode in self.conditions.keys():
-            if self.conditions[mode]['status']:
-                self.conditions[mode]['func']()  # Если состояние активно, то оно действует
-                modes.append(mode)
 
-        self.check_for_falling()  # Проверка на то, что мы падаем
-        self.conditions['jump']['just_finished'] = False  # Индикация того,
-        # что мы не только что закончили прыгать. Важно, так как от этого зависит будем ли мы падать
+        if self.check_for_mode_presence('die'):  # В случае смерти выполняется только одно состояние
+            self.conditions['die']['func']()
+            modes.append('die')
+        else:
+            for mode in self.conditions.keys():
+                if self.conditions[mode]['status']:
+                    self.conditions[mode]['func']()  # Если состояние активно, то оно действует
+                    modes.append(mode)
+
+            self.check_for_falling()  # Проверка на то, что мы падаем
+            self.conditions['jump']['just_finished'] = False  # Индикация того,
+            # что мы не только что закончили прыгать. Важно, так как от этого зависит будем ли мы падать
 
         # Выбираем режим, для которого будет рисоваться картинка и обновляем её
         mode = sorted(modes, key=lambda x: MODE_IMPORTANCE[x], reverse=True)[0]
@@ -328,6 +360,14 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
             self.activate('fall')
         self.rect.y -= 1
 
+    def check_for_dying(self) -> None:
+        if self.health <= 0:
+            self.activate('die')
+
+    def receive_damage(self, damage):
+        self.activate('hurt')
+        self.health -= damage
+
     def _update_image(self, mode: str) -> None:
         """Обновляет картинку по заданному состоянию
         :param mode: Состояние
@@ -341,7 +381,7 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
             mode = 'jump'
 
         # Увеличиваем номер картинки в анимации и обновляем изображение
-        self.mode_to_frame_number[self.last_side][mode] = (self.mode_to_frame_number[self.last_side][mode] + 1) % 7
+        self.mode_to_frame_number[self.last_side][mode] = (self.mode_to_frame_number[self.last_side][mode] + 1) % ANIMATIONS_COUNT
         self.image = self.mode_to_images[self.last_side][mode][self.mode_to_frame_number[self.last_side][mode]]
 
     def __str__(self) -> str:

@@ -2,6 +2,7 @@ from .map_part import MapPart
 from configurations.size_configurations import PART_OF_MAP_WIDTH, PART_OF_MAP_HEIGHT, ICON_WIDTH, ICON_SIZE
 from configurations.files_configurations import PATH_TO_ICONS
 from configurations.levels_configuration import SCHEMA_LETTER_TO_IMAGE
+from services_for_game.music import Music
 
 
 class Icon(MapPart):
@@ -16,6 +17,7 @@ class Icon(MapPart):
         self.rect.y += PART_OF_MAP_HEIGHT - self.rect.height - 5
 
         self.func = letter_to_func[self.symbol]
+        self.sound = letter_to_sound_func[self.symbol]
 
 
 def get_func_with_set_value(func, value):
@@ -30,12 +32,18 @@ def increase_health(obj, value):
 
 
 def increase_power(obj, value):
+    print('increasing power')
     obj.power = min(obj.MAX_POWER * 2, obj.power + value)
 
 
 letter_to_func = {
     'A': get_func_with_set_value(increase_health, 20),
     'T': get_func_with_set_value(increase_power, 5),
-    'P': get_func_with_set_value(increase_power, 10),
-    'S': get_func_with_set_value(increase_health, 30)
+    'S': get_func_with_set_value(increase_power, 10)
+}
+
+letter_to_sound_func = {
+    'A': Music().play_apple_eating_sound,
+    'T': Music().play_collecting_sound,
+    'S': Music().play_collecting_sword
 }

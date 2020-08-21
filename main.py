@@ -1,13 +1,16 @@
 from game.game import Game
-from screen_drawers.warrior_info import WarriorInfo
+from screen_drawers.base_warrior_info import BaseWarriorInfo
+from screen_drawers.pistol_warrior_info import PistolWarriorInfo
 from screen_drawers.drawer import Drawer
 from warriors.pistol_pirate import PistolPirate
+from warriors.melee_warrior import MeleeWarrior
 from services_for_game.camera import Camera
+from services_for_game.music import Music
 import pygame
 from configurations.size_configurations import SCREEN_SIZE, FPS, SIZE
 
 
-def main(warrior, game):
+def main(warrior, drawer, game):
     clock = pygame.time.Clock()
 
     running = True
@@ -40,19 +43,24 @@ def main(warrior, game):
                 if event.key == pygame.K_d:
                     warrior.deactivate('walk', direction='right')
 
-        warrior.update()
+        for w in game.warriors:
+            w.update()
         drawer.draw()
         clock.tick(FPS)
 
 
 screen = pygame.display.set_mode(SCREEN_SIZE)
-camera = Camera(*SIZE)
+camera = Camera()
 
-warrior = PistolPirate('2', camera)
-warrior._reload_magazine()
-warrior_info = WarriorInfo(warrior)
+Music().start()
 
-game = Game(warrior, pygame.sprite.Group(), camera, screen, 1)
-drawer = Drawer(screen, game, camera, warrior, warrior_info)
+game = Game(pygame.sprite.Group(), 1)
 
-main(warrior, game)
+second_warrior = PistolPirate('2', Camera(), game)
+main_warrior = MeleeWarrior('1', camera, game)
+
+main_warrior_info = BaseWarriorInfo(main_warrior)
+
+drawer = Drawer(screen, game, camera, main_warrior, main_warrior_info)
+
+main(main_warrior, drawer, game)

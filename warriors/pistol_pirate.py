@@ -18,6 +18,7 @@ class PistolPirate(BaseWarrior):
         self.reloading_speed = self.conditions['attack']['reloading_speed'] = self.data["reloading_speed"]
         self.bullet_speed = self.conditions['attack']['bullet_speed'] = self.data["bullet_speed"]
         self.delta_shooting = self.conditions['attack']['delta_shooting'] = self.data["delta_shooting"]
+        self.bullet_distance = self.conditions['attack']['bullet_distance'] = self.data["bullet_distance"]
 
         self.bullets: pygame.sprite.Group = pygame.sprite.Group()
         self.active_bullets: pygame.sprite.Group = pygame.sprite.Group()
@@ -49,11 +50,11 @@ class PistolPirate(BaseWarrior):
     def check_for_new_bullets(self):
         if time() - self.last_bullet_adding_time >= self.reloading_speed and len(self.bullets) < self.magazine_capacity:
             self.last_bullet_adding_time = time()
-            self.bullets.add(Bullet(self, self.game, self.power))
+            self.bullets.add(Bullet(self, self.game, self.power, self.bullet_distance))
 
     def _reload_magazine(self):
         for _ in range(self.magazine_capacity):
-            self.bullets.add(Bullet(self, self.game, self.power))
+            self.bullets.add(Bullet(self, self.game, self.power, self.bullet_distance))
 
     def prepare_new_active_bullet(self) -> Bullet:
         bullet: Bullet = self.bullets.sprites()[0]

@@ -9,5 +9,6 @@
   "magazine_capacity": 6,
   "reloading_speed": 3,
   "bullet_speed": 25,
-  "delta_shooting": 0.5
+  "delta_shooting": 0.5,
+  "bullet_distance": 500
 }

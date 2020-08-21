@@ -1,5 +1,5 @@
 import pygame
-from configurations.size_configurations import SCREEN_WIDTH, SCREEN_HEIGHT, SIZE
+from app.configurations.size_configurations import SCREEN_WIDTH, SCREEN_HEIGHT, SIZE
 
 
 def camera_configure(camera, target_rect):

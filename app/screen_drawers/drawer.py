@@ -1,7 +1,7 @@
-from game.game import Game
+from app.game.game import Game
 from .base_warrior_info import BaseWarriorInfo
-from warriors.base_warrior import BaseWarrior
-from services_for_game.camera import Camera
+from app.warriors.base_warrior import BaseWarrior
+from app.services_for_game.camera import Camera
 import pygame
 
 

@@ -1,8 +1,8 @@
 from .map_part import MapPart
-from configurations.size_configurations import PART_OF_MAP_WIDTH, PART_OF_MAP_HEIGHT, ICON_WIDTH, ICON_SIZE
-from configurations.files_configurations import PATH_TO_ICONS
-from configurations.levels_configuration import SCHEMA_LETTER_TO_IMAGE
-from services_for_game.music import Music
+from app.configurations.size_configurations import PART_OF_MAP_WIDTH, PART_OF_MAP_HEIGHT, ICON_WIDTH, ICON_SIZE
+from app.configurations.files_configurations import PATH_TO_ICONS
+from app.configurations.levels_configuration import SCHEMA_LETTER_TO_IMAGE
+from app.services_for_game.music import Music
 
 
 class Icon(MapPart):
@@ -32,7 +32,6 @@ def increase_health(obj, value):
 
 
 def increase_power(obj, value):
-    print('increasing power')
     obj.power = min(obj.MAX_POWER * 2, obj.power + value)
 
 

@@ -1,11 +1,11 @@
 import pygame
 
-from configurations.size_configurations import AMOUNT_OF_PARTS_IN_COL, AMOUNT_OF_PARTS_IN_ROW
+from app.configurations.size_configurations import AMOUNT_OF_PARTS_IN_COL, AMOUNT_OF_PARTS_IN_ROW
 
-from map.map_part import create_map_part
-from map.block import Block
-from map.icon import Icon
-from map.background import Background
+from app.map.map_part import create_map_part
+from app.map.block import Block
+from app.map.icon import Icon
+from app.map.background import Background
 
 from time import time
 

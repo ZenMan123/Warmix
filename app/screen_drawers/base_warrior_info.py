@@ -1,11 +1,11 @@
 import pygame
 
-from configurations.files_configurations import PATH_TO_ICONS, HEALTH_ICON_NAME, BULLET_ICON_NAME, POWER_ICON_NAME, \
+from app.configurations.files_configurations import PATH_TO_ICONS, HEALTH_ICON_NAME, BULLET_ICON_NAME, POWER_ICON_NAME, \
     TIME_ICON_NAME
-from configurations.colors_configuration import RED, BLUE, GRAY, PURPLE
-from configurations.position_configurations import WARRIOR_INFO_DELTA_X, WARRIOR_INFO_DELTA_Y, WARRIOR_INFO_POSITION
+from app.configurations.colors_configuration import RED, BLUE, GRAY, PURPLE
+from app.configurations.position_configurations import WARRIOR_INFO_DELTA_X, WARRIOR_INFO_DELTA_Y, WARRIOR_INFO_POSITION
 
-from warriors.base_warrior import BaseWarrior
+from app.warriors.base_warrior import BaseWarrior
 from .banners import BannerIcon, BannerText
 
 from time import time

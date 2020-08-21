@@ -1,5 +1,5 @@
 import pygame
-from configurations.size_configurations import INFO_SIZE
+from app.configurations.size_configurations import INFO_SIZE
 
 
 class BannerIcon:

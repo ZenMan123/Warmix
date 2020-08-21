@@ -1,8 +1,8 @@
 from .base_warrior import BaseWarrior
-from configurations.size_configurations import ANIMATIONS_COUNT, WARRIOR_WIDTH
-from configurations.modes_configuration import LEFT, RIGHT
-from services_for_game.camera import Camera
-from game.game import Game
+from app.configurations.size_configurations import ANIMATIONS_COUNT, WARRIOR_WIDTH
+from app.configurations.modes_configuration import LEFT, RIGHT
+from app.services_for_game.camera import Camera
+from app.game.game import Game
 
 import pygame
 

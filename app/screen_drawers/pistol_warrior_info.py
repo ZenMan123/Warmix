@@ -1,6 +1,6 @@
 from .base_warrior_info import BaseWarriorInfo
-from configurations.colors_configuration import PURPLE
-from configurations.files_configurations import BULLET_ICON_NAME
+from app.configurations.colors_configuration import PURPLE
+from app.configurations.files_configurations import BULLET_ICON_NAME
 
 
 class PistolWarriorInfo(BaseWarriorInfo):

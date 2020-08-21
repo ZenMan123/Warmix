@@ -1,6 +1,6 @@
 import pygame
-from configurations.files_configurations import PATH_TO_ICONS, RIP_ICON_NAME
-from configurations.size_configurations import RIP_SIZE
+from app.configurations.files_configurations import PATH_TO_ICONS, RIP_ICON_NAME
+from app.configurations.size_configurations import RIP_SIZE
 
 
 class TombStone(pygame.sprite.Sprite):

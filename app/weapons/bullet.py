@@ -1,8 +1,8 @@
 import pygame
-from configurations.size_configurations import BULLET_SIZE
-from configurations.files_configurations import PATH_TO_WEAPONS, LEFT_BULLET_NAME, RIGHT_BULLET_NAME
-from configurations.modes_configuration import LEFT, RIGHT, UP, DOWN
-from game.game import Game
+from app.configurations.size_configurations import BULLET_SIZE
+from app.configurations.files_configurations import PATH_TO_WEAPONS, LEFT_BULLET_NAME, RIGHT_BULLET_NAME
+from app.configurations.modes_configuration import LEFT, RIGHT, UP, DOWN
+from app.game.game import Game
 
 
 class Bullet(pygame.sprite.Sprite):

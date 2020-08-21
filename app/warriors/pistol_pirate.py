@@ -1,11 +1,11 @@
 from .base_warrior import BaseWarrior
-from weapons.bullet import Bullet
-from game.game import Game
+from app.weapons.bullet import Bullet
+from app.game.game import Game
 
-from services_for_game.camera import Camera
-from services_for_game.music import Music
+from app.services_for_game.camera import Camera
+from app.services_for_game.music import Music
 
-from configurations.modes_configuration import LEFT, RIGHT
+from app.configurations.modes_configuration import LEFT, RIGHT
 from time import time
 import pygame
 

@@ -1,6 +1,6 @@
-from configurations.files_configurations import *
-from configurations.modes_configuration import *
-from configurations.size_configurations import WARRIOR_SIZE
+from app.configurations.files_configurations import *
+from app.configurations.modes_configuration import *
+from app.configurations.size_configurations import WARRIOR_SIZE
 
 import pygame
 

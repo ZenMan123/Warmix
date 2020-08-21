@@ -1,12 +1,12 @@
 import pygame
 
-from game.game import Game
-from configurations.size_configurations import PART_OF_MAP_HEIGHT, PART_OF_MAP_WIDTH, HEIGHT, ANIMATIONS_COUNT
+from app.game.game import Game
+from app.configurations.size_configurations import PART_OF_MAP_HEIGHT, PART_OF_MAP_WIDTH, HEIGHT, ANIMATIONS_COUNT
 
-from services_for_game.music import Music
-from services_for_game.camera import Camera
+from app.services_for_game.music import Music
+from app.services_for_game.camera import Camera
 from .service_funcs import *
-from map.tombstone import TombStone
+from app.map.tombstone import TombStone
 
 from abc import ABC, abstractmethod
 

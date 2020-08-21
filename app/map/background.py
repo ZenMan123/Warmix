@@ -1,6 +1,6 @@
-from configurations.levels_configuration import SCHEMA_LETTER_TO_IMAGE
-from configurations.files_configurations import PATH_TO_BACKGROUNDS
-from configurations.size_configurations import PART_OF_MAP_SIZE
+from app.configurations.levels_configuration import SCHEMA_LETTER_TO_IMAGE
+from app.configurations.files_configurations import PATH_TO_BACKGROUNDS
+from app.configurations.size_configurations import PART_OF_MAP_SIZE
 from .map_part import MapPart
 
 

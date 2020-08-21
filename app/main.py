@@ -1,13 +1,13 @@
-from game.game import Game
-from screen_drawers.base_warrior_info import BaseWarriorInfo
-from screen_drawers.pistol_warrior_info import PistolWarriorInfo
-from screen_drawers.drawer import Drawer
-from warriors.pistol_pirate import PistolPirate
-from warriors.melee_warrior import MeleeWarrior
-from services_for_game.camera import Camera
-from services_for_game.music import Music
+from app.game.game import Game
+from app.screen_drawers.base_warrior_info import BaseWarriorInfo
+from app.screen_drawers.pistol_warrior_info import PistolWarriorInfo
+from app.screen_drawers.drawer import Drawer
+from app.warriors.pistol_pirate import PistolPirate
+from app.warriors.melee_warrior import MeleeWarrior
+from app.services_for_game.camera import Camera
+from app.services_for_game.music import Music
 import pygame
-from configurations.size_configurations import SCREEN_SIZE, FPS, SIZE
+from app.configurations.size_configurations import SCREEN_SIZE, FPS, SIZE
 
 
 def main(warrior, drawer, game):

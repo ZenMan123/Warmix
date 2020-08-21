@@ -1,8 +1,8 @@
 import pygame
 
-from configurations.levels_configuration import *
-from configurations.size_configurations import *
-from levels.levels import LEVELS
+from app.configurations.levels_configuration import *
+from app.configurations.size_configurations import *
+from app.levels.levels import LEVELS
 
 
 class MapPart(pygame.sprite.Sprite):

@@ -24,9 +24,6 @@ def register(login, password, name):
     conn.commit()
 
 
-
-
-
 register('zenman', '123', 'Artem')
 print(login('zenman', '123'))
 

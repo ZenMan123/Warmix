@@ -56,8 +56,8 @@ Music().start()
 
 game = Game(pygame.sprite.Group(), 1)
 
-second_warrior = PistolPirate('2', Camera(), game)
-main_warrior = MeleeWarrior('1', camera, game)
+second_warrior = MeleeWarrior('1', Camera(), game)
+main_warrior = PistolPirate('2', camera, game)
 
 main_warrior_info = BaseWarriorInfo(main_warrior)
 

@@ -13,9 +13,4 @@ class Game:
         response = []
         for i in self.participants.values():
             response.append(f'{i.user_login}-{i.warrior_name}')
-        return '%'.join(response)
-
-    def send_data(self, user_login, data):
-        for i in self.participants.values():
-            if i.user_login != user_login:
-                i.add_data(data)
+        return '$'.join(response)

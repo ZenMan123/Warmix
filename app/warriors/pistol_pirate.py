@@ -1,3 +1,4 @@
+from game_server.client import Client
 from .base_warrior import BaseWarrior
 from app.weapons.bullet import Bullet
 from app.game.game import Game
@@ -11,8 +12,9 @@ import pygame
 
 
 class PistolPirate(BaseWarrior):
-    def __init__(self, login: str, warrior_name: str, camera: Camera, game: Game, init_side: str = 'right'):
-        super(PistolPirate, self).__init__(login, warrior_name, camera, game, init_side)
+    def __init__(self, login: str, warrior_name: str, camera: Camera, game: Game, init_side: str = 'right',
+                 is_net_game: bool = False, client: Client = None):
+        super(PistolPirate, self).__init__(login, warrior_name, camera, game, init_side, is_net_game, client)
 
         self.magazine_capacity = self.conditions['attack']['magazine_capacity'] = self.data["magazine_capacity"]
         self.reloading_speed = self.conditions['attack']['reloading_speed'] = self.data["reloading_speed"]

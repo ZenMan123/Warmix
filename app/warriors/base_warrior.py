@@ -348,7 +348,7 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
 
         # Если мы играем по сети, то отправляем данные на сервер, а затем сбрасываем значения
         if self.is_net_game:
-            self.client.send_data(f'{self.login}%{"".join(self.modes_to_activate)};{"".join(self.modes_to_deactivate)}')
+            self.client.send_data(f'{self.login}${"".join(self.modes_to_activate)};{"".join(self.modes_to_deactivate)}')
             # Сбрасываем значения для активации и деактивации
             self.modes_to_activate, self.modes_to_deactivate = [], []
 

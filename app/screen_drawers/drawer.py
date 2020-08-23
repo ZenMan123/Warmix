@@ -23,6 +23,9 @@ class Drawer:
                     continue
                 self.screen.blit(obj.image, self.camera.apply(obj))
 
+        for obj in self.game.warriors.values():
+            self.screen.blit(obj.image, self.camera.apply(obj))
+
         for i in self.main_warrior_info.get_data():
             self.screen.blit(i.image, i.coords)
         self.screen.blit(self.main_warrior.image, self.camera.apply(self.main_warrior))

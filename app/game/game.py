@@ -1,3 +1,5 @@
+from typing import Dict
+
 import pygame
 
 from app.configurations.size_configurations import AMOUNT_OF_PARTS_IN_COL, AMOUNT_OF_PARTS_IN_ROW
@@ -13,7 +15,7 @@ pygame.init()
 
 
 class Game:
-    def __init__(self, warriors: pygame.sprite.Group, level: int):
+    def __init__(self, warriors: Dict[str, pygame.sprite.Sprite], level: int):
         self.level = level
 
         self.warriors = warriors
@@ -22,7 +24,7 @@ class Game:
         self.map_blocks_group = pygame.sprite.Group()
         self.map_icons_group = pygame.sprite.Group()
         self.map_bullets_group = pygame.sprite.Group()
-        self.groups = [self.map_background_group, self.map_blocks_group, self.map_icons_group, self.map_tombstones_group, self.map_bullets_group, self.warriors]
+        self.groups = [self.map_background_group, self.map_blocks_group, self.map_icons_group, self.map_tombstones_group, self.map_bullets_group]
 
         for x in range(AMOUNT_OF_PARTS_IN_ROW):
             for y in range(AMOUNT_OF_PARTS_IN_COL):

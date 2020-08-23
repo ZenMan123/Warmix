@@ -13,15 +13,15 @@ import threading
 
 
 class GetDataThread(threading.Thread):
-    def __init__(self, warriors, client):
+    def __init__(self, game, client):
         super().__init__()
-        self.warriors = warriors
+        self.game = game
         self.client = client
 
     def run(self):
         while True:
             data = self.client.receive_data()
-            print('Received:', data)
+            self.game.warriors[data[0]].update_modes(data[1])
 
 
 def update_main_warrior(warrior, drawer):
@@ -66,7 +66,8 @@ def update_main_warrior(warrior, drawer):
                     warrior.modes_to_deactivate.append('wr')
 
         clock.tick(FPS)
-        warrior.update()
+        for w in game.warriors.values():
+            w.update()
         drawer.draw()
 
 
@@ -74,20 +75,30 @@ def main(warrior, drawer):
     update_main_warrior(warrior, drawer)
 
 
-client = Client('artem', '1')
+warrior_name_to_type = {
+    '1': MeleeWarrior,
+    '2': PistolPirate
+}
+
+client = Client('artem', '2')
 client.create_game()
 client.participate('1')
-print(client.start_game())
+participants = client.wait_for_game_start()
 
-get_data_thread = GetDataThread([], client)
+game = Game({}, 1)
+
+for i in participants:
+    key, value = i.split('-')
+    warrior_name_to_type[value](key, value, Camera(), game, is_net_game=True, client=Client([], 'fd'))
+
+get_data_thread = GetDataThread(game, client)
 get_data_thread.start()
 
 screen = pygame.display.set_mode(SCREEN_SIZE)
 camera = Camera()
 Music().start()
-game = Game(pygame.sprite.Group(), 1)
 
-main_warrior = PistolPirate('artem', '2', camera, game, is_net_game=True, client=client)
+main_warrior = PistolPirate(client.login, client.warrior_name, camera, game, is_net_game=True, client=client)
 main_warrior_info = PistolWarriorInfo(main_warrior)
 
 drawer = Drawer(screen, game, camera, main_warrior, main_warrior_info)

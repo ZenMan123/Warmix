@@ -41,7 +41,7 @@ class Bullet(pygame.sprite.Sprite):
         self.flown_distance += (self.speed_x ** 2 + self.speed_y ** 2) ** 0.5
 
         blocks = pygame.sprite.spritecollide(self, self.game.map_blocks_group, False)
-        warriors = pygame.sprite.spritecollide(self, self.game.warriors, False)
+        warriors = pygame.sprite.spritecollide(self, self.game.warriors.values(), False)
         if blocks:
             self.kill()
         if warriors:

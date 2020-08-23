@@ -31,9 +31,9 @@ class Server:
             print(command)
             user_login, game_id, data = command.split('%')[1:]
             for user in self.games[int(game_id)].participants.values():
-                # if user.user_login != user_login:
-                self.sender.sendto(bytes(f'DATA:{data}', encoding='utf-8'), user.user_addr)
-                print(f'SEND DATA {data} from {user_login} to {user.user_login}')
+                if user.user_login != user_login:
+                    self.sender.sendto(bytes(f'DATA:{data}', encoding='utf-8'), user.user_addr)
+                    print(f'SEND DATA {data} from {user_login} to {user.user_login}')
 
         if command.startswith('START'):
             data = command.split('%')

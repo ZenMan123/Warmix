@@ -31,7 +31,7 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
         self.modes_to_activate, self.modes_to_deactivate = [], []
 
         # Добавляем себя в список воинов
-        self.game.warriors.add(self)
+        self.game.warriors[self.login] = self
 
         # Загружаем информацию из json файлов о персонаже, а также анимации различных состояний
         load_features_data(self)
@@ -359,7 +359,7 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
         # Настраиваем камеру
         self.camera.update(self)
 
-    def update_modes(self, data) -> None:
+    def update_modes(self, modes_description) -> None:
         """Используется для игры по сети. Обновляет список активных состояний, после чего вызывает метод update.
         Имитирует нажатие клавиш на клавиатуре. То есть, на сервер от каждого игрока приходит описание действий,
         которые он совершил путём нажатия клавиш на клавиатуре. Каждый клиент, получая эти данные, преподносит их персонажу так,
@@ -373,7 +373,6 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
         """
 
         # TODO сделать рефакторинг этого ужастного кода
-        user_login, modes_description = data.split('%')
         activate_modes, deactivate_modes = modes_description.split(';')
         if 'wl' in activate_modes:
             self.activate('walk', 'left')

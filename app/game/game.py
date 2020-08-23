@@ -11,9 +11,6 @@ from time import time
 
 pygame.init()
 
-# TODO надо сделать отдельный класс для отображения информации о пользователе
-# TODO а класс Game о BaseWarrior знать ничего не должен
-
 
 class Game:
     def __init__(self, warriors: pygame.sprite.Group, level: int):

@@ -2,14 +2,14 @@ import socket
 
 
 class Client:
-    def __init__(self, server_addr, login, password):
+    def __init__(self, login, password):
         self.name = self.warrior_name = None
         self.user_login = login
         self.password = password
         self.authorized = False
 
         self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.server_address = server_addr
+        self.server_address = ('192.168.1.34', 9090)
 
     def set_name(self, name):
         self.name = name
@@ -83,6 +83,7 @@ class Client:
             if data and data.startswith('RECEIVE_DATA:') and data != 'RECEIVE_DATA:':
                 data = data.split(':')[1]
                 print('Returned data from wait_for_data:', data)
+                return data
 
     def create_game(self):
         if not self.authorized:

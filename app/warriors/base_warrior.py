@@ -5,6 +5,8 @@ from app.configurations.size_configurations import PART_OF_MAP_HEIGHT, PART_OF_M
 
 from app.services_for_game.music import Music
 from app.services_for_game.camera import Camera
+from game_server.client import Client
+
 from .service_funcs import *
 from app.map.tombstone import TombStone
 
@@ -12,14 +14,23 @@ from abc import ABC, abstractmethod
 
 
 class BaseWarrior(ABC, pygame.sprite.Sprite):
-    def __init__(self, warrior_name: str, camera: Camera, game: Game, init_side: str = 'right'):
+    def __init__(self, login: str, warrior_name: str, camera: Camera, game: Game, init_side: str = 'right',
+                 is_net_game: bool = False, client: Client = None):
         super(BaseWarrior, self).__init__()
 
+        self.login = login  # Нужно для игры по сети, но параметр является обязательным в любом случае
         self.warrior_name = warrior_name
         self.camera = camera
         self.game = game
 
-        # Добавляем сеkбя в список воинов
+        # Эта часть атрибутов нужна исключительно для игры по сети
+        self.is_net_game = is_net_game
+        self.client = client
+        # Для отправки сообщений на сервер о состоянии клавиатуры.
+        # Более подробное описание можно посмотреть в методе update_modes
+        self.modes_to_activate, self.modes_to_deactivate = [], []
+
+        # Добавляем себя в список воинов
         self.game.warriors.add(self)
 
         # Загружаем информацию из json файлов о персонаже, а также анимации различных состояний
@@ -107,7 +118,7 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
     def _run(self) -> None:
         """Метод вызывается при беге"""
 
-        if not self.check_for_mode_presence('walk'):   # Если мы не идём, то мы не можем бежать
+        if not self.check_for_mode_presence('walk'):  # Если мы не идём, то мы не можем бежать
             return
 
         self._change_pos_while_running()
@@ -335,12 +346,65 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
             self.conditions['jump']['just_finished'] = False  # Индикация того,
             # что мы не только что закончили прыгать. Важно, так как от этого зависит будем ли мы падать
 
+        # Если мы играем по сети, то отправляем данные на сервер, а затем сбрасываем значения
+        if self.is_net_game:
+            self.client.send_data(f'{self.login}%{"".join(self.modes_to_activate)};{"".join(self.modes_to_deactivate)}')
+            # Сбрасываем значения для активации и деактивации
+            self.modes_to_activate, self.modes_to_deactivate = [], []
+
         # Выбираем режим, для которого будет рисоваться картинка и обновляем её
         mode = sorted(modes, key=lambda x: MODE_IMPORTANCE[x], reverse=True)[0]
         self._update_image(mode)
 
         # Настраиваем камеру
         self.camera.update(self)
+
+    def update_modes(self, data) -> None:
+        """Используется для игры по сети. Обновляет список активных состояний, после чего вызывает метод update.
+        Имитирует нажатие клавиш на клавиатуре. То есть, на сервер от каждого игрока приходит описание действий,
+        которые он совершил путём нажатия клавиш на клавиатуре. Каждый клиент, получая эти данные, преподносит их персонажу так,
+        будто игрок физически нажал на эти клавиши, хотя сервер просто отправил список нажатых клавиш конкретного игрока.
+        Получается, игрок с другого устройства управляет персонажем на этом устройстве
+        data имеет вид '{user_login}%{modes_description}, modes_description имеет вид '{conditions};{conditions}.
+        conditions представляет из себя строку, состоящую из активируемых и деактивируемых действий.
+        wl - walk left, wr - walk right, c - collect, ru - run, j -jump, a_{pos_x}_{pos_y} - attack и позиция нажатия
+        Например, информация о том, что нам нужно активировать ходьбу налево и атаку в позиции (x, y) будет выглядеть так:
+        'wla_x_y'
+        """
+
+        # TODO сделать рефакторинг этого ужастного кода
+        user_login, modes_description = data.split('%')
+        activate_modes, deactivate_modes = modes_description.split(';')
+        if 'wl' in activate_modes:
+            self.activate('walk', 'left')
+        if 'wr' in activate_modes:
+            self.activate('walk', 'right')
+        if 'c' in activate_modes:
+            self.activate('collect')
+        if 'ru' in activate_modes:
+            self.activate('run')
+        if 'j' in activate_modes:
+            self.activate('jump')
+        if 'a' in activate_modes:
+            pos = activate_modes.find('a') + 1
+            res = 'a'
+            while pos < len(activate_modes):
+                symbol = activate_modes[pos]
+                if symbol.isdecimal() or symbol == '_':
+                    res += symbol
+                else:
+                    break
+            mode, x, y = res.split('_')
+            self.activate('attack')
+            self.change_last_side((x, y))
+
+        if 'wl' in deactivate_modes:
+            self.deactivate('walk', 'left')
+        if 'wr' in deactivate_modes:
+            self.deactivate('walk', 'right')
+        if 'ru' in deactivate_modes:
+            self.deactivate('run')
+        self.update()
 
     def check_for_mode_presence(self, *modes) -> bool:
         """Проверяем наличие состояний"""
@@ -381,7 +445,8 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
             mode = 'jump'
 
         # Увеличиваем номер картинки в анимации и обновляем изображение
-        self.mode_to_frame_number[self.last_side][mode] = (self.mode_to_frame_number[self.last_side][mode] + 1) % ANIMATIONS_COUNT
+        self.mode_to_frame_number[self.last_side][mode] = (self.mode_to_frame_number[self.last_side][
+                                                               mode] + 1) % ANIMATIONS_COUNT
         self.image = self.mode_to_images[self.last_side][mode][self.mode_to_frame_number[self.last_side][mode]]
 
     def __str__(self) -> str:

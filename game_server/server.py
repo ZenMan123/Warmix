@@ -6,11 +6,12 @@ from game_server.game import Game
 
 
 class Server:
+    address = host, port = socket.gethostbyname(socket.gethostname()), 9090
+    sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
     def __init__(self):
         self.games: Dict[int, Game] = {}
         self.games_count = 0
-        self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.host, self.port = socket.gethostbyname(socket.gethostname()), 9090
         self.sender.bind((self.host, self.port))
         print(f'Started server on {self.host}:{self.port}')
 

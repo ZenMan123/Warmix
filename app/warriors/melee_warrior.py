@@ -1,3 +1,5 @@
+from game_server.client import Client
+
 from .base_warrior import BaseWarrior
 from app.configurations.size_configurations import ANIMATIONS_COUNT, WARRIOR_WIDTH
 from app.configurations.modes_configuration import LEFT, RIGHT
@@ -8,8 +10,9 @@ import pygame
 
 
 class MeleeWarrior(BaseWarrior):
-    def __init__(self, warrior_name: str, camera: Camera, game: Game, init_side: str = 'right'):
-        super().__init__(warrior_name, camera, game, init_side)
+    def __init__(self, login: str, warrior_name: str, camera: Camera, game: Game, init_side: str = 'right',
+                 is_net_game: bool = False, client: Client = None):
+        super().__init__(login, warrior_name, camera, game, init_side=init_side, is_net_game=is_net_game, client=client)
         self.conditions['attack']['attack_count'] = -1
 
     def _attack(self) -> None:

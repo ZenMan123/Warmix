@@ -21,6 +21,3 @@ def login(login: str, password: str):
     if res[2] == password:
         return res
     return None
-
-
-

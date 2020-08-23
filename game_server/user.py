@@ -15,3 +15,6 @@ class User:
         temp = self.mailbox.copy()
         self.mailbox.clear()
         return '%'.join(temp)
+
+    def __str__(self):
+        return f'{self.user_login} - {self.mailbox}'

@@ -12,7 +12,6 @@ def register(login: str, password: str, name: str):
         conn.commit()
         return True
     except sqlite3.IntegrityError:
-        print('login error')
         return False
 
 

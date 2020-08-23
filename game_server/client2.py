@@ -1,21 +1,21 @@
-import socket
-from game_server.create_requests import create_requests
+from game_server.client import Client
 
-server_addr = ('localhost', 9090)
-LOGIN, PASSWORD = 'artem', 'artem'
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.bind(('localhost', 7070))
 
-participate_request = create_requests('PARTICIPATE', LOGIN, '1', str(1))
-sock.sendto(bytes(participate_request, encoding='utf-8'), server_addr)
+server_addr = ('192.168.1.34', 9090)
+LOGIN, PASSWORD = 'safin', 'artem'
+client = Client(server_addr)
 
-data_request = create_requests('SEND_DATA', '1', LOGIN, 'my first message')
-sock.sendto(bytes(data_request, encoding='utf-8'), server_addr)
+client.set_login('safin')
+client.set_password('safin')
+client.set_warrior_name('1')
+print('Login:', client.login())
+
+client.participate('1')
+client.start()
+participants_list = client.wait_for_game_start()
+print(participants_list, 'participants list')
 
 while True:
-    request = create_requests('RECEIVE_DATA', '1', LOGIN)
-    sock.sendto(bytes(request, encoding='utf-8'), server_addr)
+    data = input('Data to send: ')
+    client.send_data(data)
 
-    data = sock.recv(150).decode('utf-8')
-    if data:
-        print(data)

@@ -1,17 +1,18 @@
 from app.game.game import Game
 from .base_warrior_info import BaseWarriorInfo
 from app.warriors.base_warrior import BaseWarrior
+from app.warriors.base_warrior import BaseWarrior
 from app.services_for_game.camera import Camera
 import pygame
 
 
 class Drawer:
-    def __init__(self, screen, game: Game, camera: Camera, main_warrior: BaseWarrior, main_warrior_info: BaseWarriorInfo):
+    def __init__(self, screen, game: Game, camera: Camera, main_warrior: BaseWarrior):
         self.screen = screen
         self.game = game
         self.camera = camera
         self.main_warrior = main_warrior
-        self.main_warrior_info = main_warrior_info
+        self.main_warrior_info = main_warrior.info
 
     def draw(self):
         self.main_warrior_info.form_and_set_warrior_info()

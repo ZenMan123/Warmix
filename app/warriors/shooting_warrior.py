@@ -1,6 +1,6 @@
 from game_server.client import Client
 from .base_warrior import BaseWarrior
-from app.weapons.bullet import Bullet
+from app.dynamic_weapons.bullet import Bullet
 from app.game.game import Game
 
 from app.services_for_game.camera import Camera
@@ -10,11 +10,13 @@ from app.configurations.modes_configuration import LEFT, RIGHT
 from time import time
 import pygame
 
+from ..screen_drawers.shooting_warrior_info import ShootingWarriorInfo
 
-class PistolPirate(BaseWarrior):
+
+class ShootingWarrior(BaseWarrior):
     def __init__(self, login: str, warrior_name: str, camera: Camera, game: Game, init_side: str = 'right',
-                 is_net_game: bool = False, client: Client = None):
-        super(PistolPirate, self).__init__(login, warrior_name, camera, game, init_side, is_net_game, client)
+                 client: Client = None):
+        super(ShootingWarrior, self).__init__(login, warrior_name, camera, game, init_side, client)
 
         self.magazine_capacity = self.conditions['attack']['magazine_capacity'] = self.data["magazine_capacity"]
         self.reloading_speed = self.conditions['attack']['reloading_speed'] = self.data["reloading_speed"]
@@ -28,6 +30,8 @@ class PistolPirate(BaseWarrior):
 
         self.last_bullet_adding_time = time()
         self.last_trying_to_shoot_time = time()
+
+        self.info = ShootingWarriorInfo(self)
 
     def _attack(self) -> None:
         self.deactivate('attack')
@@ -44,8 +48,6 @@ class PistolPirate(BaseWarrior):
         self.active_bullets.add(self.prepare_new_active_bullet())
 
     def update(self) -> None:
-        for bullet in self.active_bullets:
-            bullet.move()
         self.check_for_new_bullets()
         super().update()
 

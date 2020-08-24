@@ -12,20 +12,22 @@ from app.map.tombstone import TombStone
 
 from abc import ABC, abstractmethod
 
+from app.screen_drawers.base_warrior_info import BaseWarriorInfo
+
 
 class BaseWarrior(ABC, pygame.sprite.Sprite):
     def __init__(self, login: str, warrior_name: str, camera: Camera, game: Game, init_side: str = 'right',
-                 is_net_game: bool = False, client: Client = None):
+                 client: Client = None):
         super(BaseWarrior, self).__init__()
 
-        self.login = login  # Нужно для игры по сети, но параметр является обязательным в любом случае
+        self.login = login  # Уникальный идентификатор игрока
         self.warrior_name = warrior_name
         self.camera = camera
         self.game = game
 
-        # Эта часть атрибутов нужна исключительно для игры по сети
-        self.is_net_game = is_net_game
+        # Этот атрибут нужен исключительно для игры по сети
         self.client = client
+
         # Для отправки сообщений на сервер о состоянии клавиатуры.
         # Более подробное описание можно посмотреть в методе update_modes
         self.modes_to_activate, self.modes_to_deactivate = [], []
@@ -38,13 +40,16 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
         set_mode_to_images_dict(self)
         set_mode_to_frame_number_dict(self)
 
-        self._set_conditions()
+        self._set_conditions()  # Задаём словарь состояний и их параметры
 
         # Задаём координаты и активное изображение
-        self.image: pygame.Surface = self.mode_to_images[init_side]['idle'][0]
+        self.last_side = init_side
+        self.image: pygame.Surface = self.mode_to_images[self.last_side]['idle'][0]
         self.rect: pygame.Rect = self.image.get_rect()
         self.rect.x, self.rect.y = PART_OF_MAP_WIDTH, HEIGHT - self.rect.height - PART_OF_MAP_HEIGHT
-        self.last_side = init_side
+
+        # Для отображения основной информации
+        self.info = BaseWarriorInfo(self)
 
     def _set_conditions(self) -> None:
         """Задаёт условия состояний. В зависимости от этой конфигурации будет зависеть работа методов"""
@@ -203,7 +208,6 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
     @abstractmethod
     def _attack(self) -> None:
         """Метод вызывается при атаке персонажа. Нуждается в переопределении в дочерних классах"""
-        self.deactivate('attack')
         pass
 
     def _idle(self) -> None:
@@ -347,7 +351,7 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
             # что мы не только что закончили прыгать. Важно, так как от этого зависит будем ли мы падать
 
         # Если мы играем по сети, то отправляем данные на сервер, а затем сбрасываем значения
-        if self.is_net_game:
+        if self.client:
             self.client.send_data(f'{self.login}${"".join(self.modes_to_activate)};{"".join(self.modes_to_deactivate)}')
             # Сбрасываем значения для активации и деактивации
             self.modes_to_activate, self.modes_to_deactivate = [], []

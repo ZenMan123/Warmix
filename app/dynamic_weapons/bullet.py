@@ -33,7 +33,7 @@ class Bullet(pygame.sprite.Sprite):
     def set_coord(self, topleft):
         self.rect.topleft = topleft
 
-    def move(self):
+    def update(self):
         sign_x = 1 if self.direction_x == RIGHT else -1
         sign_y = 1 if self.direction_y == DOWN else -1
         self.rect.x += sign_x * self.speed_x
@@ -58,4 +58,4 @@ class Bullet(pygame.sprite.Sprite):
         self.speed_y = speed
 
     def start(self):
-        self.game.map_bullets_group.add(self)
+        self.game.dynamic_weapons_group.add(self)

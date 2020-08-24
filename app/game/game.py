@@ -23,8 +23,8 @@ class Game:
         self.map_background_group = pygame.sprite.Group()
         self.map_blocks_group = pygame.sprite.Group()
         self.map_icons_group = pygame.sprite.Group()
-        self.map_bullets_group = pygame.sprite.Group()
-        self.groups = [self.map_background_group, self.map_blocks_group, self.map_icons_group, self.map_tombstones_group, self.map_bullets_group]
+        self.dynamic_weapons_group = pygame.sprite.Group()
+        self.groups = [self.map_background_group, self.map_blocks_group, self.map_icons_group, self.map_tombstones_group, self.dynamic_weapons_group]
 
         for x in range(AMOUNT_OF_PARTS_IN_ROW):
             for y in range(AMOUNT_OF_PARTS_IN_COL):
@@ -41,3 +41,9 @@ class Game:
             self.map_background_group.add(Background(x, y, self.level, '.'))
         else:
             self.map_background_group.add(map_image)
+
+    def update_objects(self):
+        for warrior in self.warriors.values():
+            warrior.update()
+        for weapon in self.dynamic_weapons_group:
+            weapon.update()

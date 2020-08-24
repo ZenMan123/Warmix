@@ -5,14 +5,13 @@ from app.configurations.files_configurations import PATH_TO_ICONS, HEALTH_ICON_N
 from app.configurations.colors_configuration import RED, BLUE, GRAY, PURPLE
 from app.configurations.position_configurations import WARRIOR_INFO_DELTA_X, WARRIOR_INFO_DELTA_Y, WARRIOR_INFO_POSITION
 
-from app.warriors.base_warrior import BaseWarrior
 from .banners import BannerIcon, BannerText
 
 from time import time
 
 
 class BaseWarriorInfo:
-    def __init__(self, warrior: BaseWarrior):
+    def __init__(self, warrior):
         self.warrior = warrior
         self.font = pygame.font.Font(None, 36)
         self.info_banners = pygame.sprite.Group()

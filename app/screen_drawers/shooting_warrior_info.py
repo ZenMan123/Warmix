@@ -3,7 +3,7 @@ from app.configurations.colors_configuration import PURPLE
 from app.configurations.files_configurations import BULLET_ICON_NAME
 
 
-class PistolWarriorInfo(BaseWarriorInfo):
+class ShootingWarriorInfo(BaseWarriorInfo):
     def __init__(self, warrior):
         super().__init__(warrior)
         self.add_category('bullets', str(len(self.warrior.bullets)), PURPLE, BULLET_ICON_NAME)

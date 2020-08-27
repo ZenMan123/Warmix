@@ -2,7 +2,9 @@ import pygame
 
 from app.configurations.menu_configurations import PATH_TO_MENU, BACKGROUND_NAME, NET_GAME_BUTTON_NAME, \
     TRAINING_ROOM_BUTTON_NAME, SETTINGS_BUTTON_NAME, TURN_SOUND_EFFECTS_ON_BUTTON_NAME, \
-    TURN_SOUND_EFFECTS_OFF_BUTTON_NAME, TURN_MUSIC_ON_BUTTON_NAME, TURN_MUSIC_OFF_BUTTON_NAME, BUTTON_BACK
+    TURN_SOUND_EFFECTS_OFF_BUTTON_NAME, TURN_MUSIC_ON_BUTTON_NAME, TURN_MUSIC_OFF_BUTTON_NAME, BUTTON_BACK, \
+    CONNECT_TO_THE_GAME, CREATE_GAME
+
 from app.configurations.size_configurations import SCREEN_SIZE
 from app.menu.button import Button, ChangingValueButton, InputValueButton
 from abc import ABC, abstractmethod
@@ -32,7 +34,7 @@ class BaseMenu(ABC):
 class MainMenu(BaseMenu):
     def set_buttons(self):
         self.buttons = [
-            Button(NET_GAME_BUTTON_NAME, 0, 'net game'),
+            Button(NET_GAME_BUTTON_NAME, 0, 'net_game'),
             Button(TRAINING_ROOM_BUTTON_NAME, 1, 'training'),
             Button(SETTINGS_BUTTON_NAME, 2, 'settings')
         ]
@@ -49,6 +51,9 @@ class MainMenu(BaseMenu):
                         res = button.process_pressing(event.pos)
                         if res:
                             return res
+
+                if event.type == pygame.QUIT:
+                    return 'quit'
             self.update()
 
 
@@ -100,3 +105,41 @@ class SettingsMenu(BaseMenu):
 
             self.update()
 
+
+class NetGameMenu(BaseMenu):
+    def __init__(self, *args):
+        self.conditions = {}
+        super().__init__(*args)
+
+    def set_buttons(self):
+        self.buttons = [
+            Button(CONNECT_TO_THE_GAME, 0, 'connect'),
+            InputValueButton(1, 'Game id'),
+            Button(CREATE_GAME, 2, 'create'),
+            Button(BUTTON_BACK, 3, 'back')
+        ]
+
+    def run_menu(self):
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEMOTION:
+                    for button in self.buttons:
+                        button.process_aiming(event.pos)
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    for button in self.buttons:
+                        res: str = button.process_pressing(event.pos)
+                        if res == 'connect':
+                            return res, self.conditions['game_id']
+                        if res:
+                            return res
+
+                if event.type == pygame.KEYDOWN:
+                    for button in self.buttons:
+                        try:
+                            res = button.process_pressing_keyboard(event)
+                            if res.startswith('Game id:'):
+                                self.conditions['game_id'] = res.split('Game id:')[1]
+                        except:
+                            continue
+            self.update()

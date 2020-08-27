@@ -353,7 +353,8 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
 
         # Если мы играем по сети, то отправляем данные на сервер, а затем сбрасываем значения
         if self.client:
-            self.client.send_data(f'{self.login}${"".join(self.modes_to_activate)};{"".join(self.modes_to_deactivate)}')
+            self.client.send_data(f'{self.login}${"".join(self.modes_to_activate)};'
+                                  f'{"".join(self.modes_to_deactivate)}${self.rect.x}_{self.rect.y}')
             # Сбрасываем значения для активации и деактивации
             self.modes_to_activate, self.modes_to_deactivate = [], []
 
@@ -370,7 +371,8 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
         которые он совершил путём нажатия клавиш на клавиатуре. Каждый клиент, получая эти данные, преподносит их персонажу так,
         будто игрок физически нажал на эти клавиши, хотя сервер просто отправил список нажатых клавиш конкретного игрока.
         Получается, игрок с другого устройства управляет персонажем на этом устройстве
-        data имеет вид '{user_login}%{modes_description}, modes_description имеет вид '{conditions};{conditions}.
+        data имеет вид '{user_login}%{modes_description}${end_pos}, modes_description имеет вид '{conditions};{conditions}.
+        end_pos имеет вид {pos_x}_{pos_y}, которое сообщяет конечное положения игрока (из-за запаздываний в сети нам нужна эта вешь)
         conditions представляет из себя строку, состоящую из активируемых и деактивируемых действий.
         wl - walk left, wr - walk right, c - collect, ru - run, j -jump, a_{pos_x}_{pos_y} - attack и позиция нажатия
         Например, информация о том, что нам нужно активировать ходьбу налево и атаку в позиции (x, y) будет выглядеть так:
@@ -378,7 +380,9 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
         """
 
         # TODO сделать рефакторинг этого ужастного кода
-        activate_modes, deactivate_modes = modes_description.split(';')
+        activate_modes, deactivate_modes = modes_description[0].split(';')
+        position = modes_description[1].split('_')
+        self.rect.x, self.rect.y = int(position[0]), int(position[1])
         if 'wl' in activate_modes:
             self.activate('walk', 'left')
         if 'wr' in activate_modes:

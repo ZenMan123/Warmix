@@ -10,6 +10,8 @@ TURN_MUSIC_ON_BUTTON_NAME = 'button_turn-music-on.png'
 TURN_MUSIC_OFF_BUTTON_NAME = 'button_turn-music-off.png'
 TURN_SOUND_EFFECTS_ON_BUTTON_NAME = 'button_turn-sound-effects-on.png'
 TURN_SOUND_EFFECTS_OFF_BUTTON_NAME = 'button_turn-sound-effects-off.png'
+CONNECT_TO_THE_GAME = 'button_connect-to-the-game.png'
+CREATE_GAME = 'button_create-game.png'
 BUTTON_BACK = 'button_back.png'
 REVERSE_IMAGE_SUFFIX = '_reverse'
 

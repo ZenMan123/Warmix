@@ -51,7 +51,6 @@ class ChangingValueButton:
             self.current_index = 0
 
         self.value = self.values[self.current_index]
-        print(self.value)
         self.image = self.images[self.value]['normal']
         self.position = TOP_BUTTON_POSITION[0], TOP_BUTTON_POSITION[1] + number_in_col * DELTA_Y
 

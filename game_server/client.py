@@ -12,7 +12,7 @@ class Client:
 
     def create_game(self):
         self.sender.sendto(b'CREATE', self.server_address)
-        self.wait_for_game_id()
+        return self.wait_for_game_id()
 
     def start_game(self):
         self.sender.sendto(bytes(f'START%{self.game_id}', encoding='utf-8'), self.server_address)
@@ -20,11 +20,13 @@ class Client:
 
     def participate(self, game_id):
         self.game_id = game_id
-        self.sender.sendto(bytes(f'PARTICIPATE%{self.login}%{self.warrior_name}%{self.game_id}', encoding='utf-8'), self.server_address)
+        self.sender.sendto(bytes(f'PARTICIPATE%{self.login}%{self.warrior_name}%{self.game_id}', encoding='utf-8'),
+                           self.server_address)
 
     def send_data(self, data):
         if data[-2:] != '$;':
-            self.sender.sendto(bytes(f'SEND_DATA%{self.login}%{self.game_id}%{data}', encoding='utf-8'), self.server_address)
+            self.sender.sendto(bytes(f'SEND_DATA%{self.login}%{self.game_id}%{data}', encoding='utf-8'),
+                               self.server_address)
 
     def receive_data(self):
         while True:
@@ -40,16 +42,16 @@ class Client:
             try:
                 data = self.sender.recv(300).decode('utf-8')
                 if data.startswith('PARTICIPANTS:'):
-                    return data.split(':')[1].split('$')
+                    return data.split('PARTICIPANTS:')[1].split('$')
             except socket.timeout:
                 continue
+
 
     def wait_for_game_id(self):
         while True:
             try:
                 data = self.sender.recv(300).decode('utf-8')
                 if data.startswith('GAME_ID:'):
-                    self.game_id = data.split(':')[1]
-                    return
+                    return data.split(':')[1]
             except socket.timeout:
                 continue

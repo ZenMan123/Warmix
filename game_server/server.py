@@ -1,4 +1,5 @@
 import socket
+from time import time, sleep
 from typing import Dict
 
 from game_server.game import Game
@@ -23,6 +24,7 @@ class Server:
 
         if command.startswith('PARTICIPATE'):
             data = command.split('%')
+            print(data, 'participate')
             user_login, warrior_name, game_id = data[1:]
             self.games[int(game_id)].add_participant(user_login, warrior_name, addr)
             print(f'User ({user_login}, {warrior_name}) participated to game {game_id}')
@@ -40,6 +42,7 @@ class Server:
             game_id = data[1]
             answer = 'PARTICIPANTS:' + self.games[int(game_id)].get_participants_list()
             for user in self.games[int(game_id)].participants.values():
+                print(user.user_login, answer)
                 self.sender.sendto(self.bytes(answer), user.user_addr)
             print(f'Started game {game_id}')
 

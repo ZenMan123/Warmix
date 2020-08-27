@@ -2,7 +2,7 @@ import json
 
 from app.configurations.warriors_configuration import WARRIOR_NAME_TO_TYPE
 from app.game.game import Game
-from app.menu.menu import MainMenu, SettingsMenu
+from app.menu.menu import MainMenu, SettingsMenu, NetGameMenu
 from app.screen_drawers.drawer import Drawer
 
 from app.services_for_game.camera import Camera
@@ -22,6 +22,7 @@ def main_game_cycle(warrior, game, drawer):
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                game.music.stop()
                 running = False
 
             if event.type == pygame.KEYDOWN:
@@ -62,43 +63,75 @@ def main_game_cycle(warrior, game, drawer):
         drawer.draw()
 
 
-def run_game(screen, level, warrior_name, login, music, client=None):
+def run_game(screen, level, warrior_name, login, music, client=None, game_id=None):
     game = Game({}, level, music)
 
     if client:
-        game_id = client.create_game()
-        client.participate(game_id)
-        participants = client.wait_for_game_start()
+        if not game_id:
+            game_id = client.create_game()
+            client.participate(game_id)
+            waiting_screen(screen)
+            participants = client.start_game()
+        else:
+            client.participate(game_id)
+            participants = client.wait_for_game_start()
+        print(participants)
 
         for i in participants:
             login, warrior_name = i.split('-')
-            WARRIOR_NAME_TO_TYPE[warrior_name](login, warrior_name, Camera(), game)
-
+            WARRIOR_NAME_TO_TYPE[warrior_name](login, warrior_name, Camera(), game, Music())
+        print('2')
         get_data_thread = GetDataThread(game, client)
         get_data_thread.start()
-
+        print('3')
     camera = Camera()
 
     main_warrior = WARRIOR_NAME_TO_TYPE[warrior_name](login, warrior_name, camera, game, music, client=client)
     drawer = Drawer(screen, game, camera, main_warrior)
     music.start()
-
+    print('4')
     main_game_cycle(main_warrior, game, drawer)
+
+
+def waiting_screen(screen):
+    screen.fill((255, 255, 255))
+    font = pygame.font.Font(None, 36)
+    screen.blit(font.render('Click any key to start game', 1, (255, 0, 0)), (200, 200))
+    pygame.display.flip()
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                running = False
 
 
 def run_menu():
     menu = MainMenu(screen)
     settings = SettingsMenu(screen, load_user_settings_conditions())
+    net_game = NetGameMenu(screen)
+
     while True:
+        conditions = load_user_settings_conditions()
+        music = True if conditions['music'] == 'music_on' else False
+        sound_effects = True if conditions['sound_effects'] == 'sound_effects_on' else False
+
         res = menu.run_menu()
         if res == 'training':
-            conditions = load_user_settings_conditions()
-            music = True if conditions['music'] == 'music_on' else False
-            sound_effects = True if conditions['sound_effects'] == 'sound_effects_on' else False
             run_game(screen, 1, conditions['warrior_name'], conditions['login'], Music(music, sound_effects))
         if res == 'settings':
             conditions = settings.run_menu()
             save_user_settings_conditions(conditions)
+        if res == 'net_game':
+            res = net_game.run_menu()
+            if res == 'create':
+                run_game(screen, 1, conditions['warrior_name'], conditions['login'],
+                         Music(music, sound_effects), Client(conditions['login'], conditions['warrior_name']))
+            if res[0] == 'connect':
+                run_game(screen, 1, conditions['warrior_name'], conditions['login'], Music(music, sound_effects),
+                         Client(conditions['login'], conditions['warrior_name']), res[1])
+
+        if res == 'quit':
+            break
 
 
 def save_user_settings_conditions(conditions):
@@ -113,4 +146,3 @@ def load_user_settings_conditions():
 
 screen = pygame.display.set_mode(SCREEN_SIZE)
 run_menu()
-

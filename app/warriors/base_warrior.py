@@ -16,14 +16,15 @@ from app.screen_drawers.base_warrior_info import BaseWarriorInfo
 
 
 class BaseWarrior(ABC, pygame.sprite.Sprite):
-    def __init__(self, login: str, warrior_name: str, camera: Camera, game: Game, init_side: str = 'right',
-                 client: Client = None):
+    def __init__(self, login: str, warrior_name: str, camera: Camera, game: Game, music: Music,
+                 init_side: str = 'right', client: Client = None):
         super(BaseWarrior, self).__init__()
 
         self.login = login  # Уникальный идентификатор игрока
         self.warrior_name = warrior_name
         self.camera = camera
         self.game = game
+        self.music = music
 
         # Этот атрибут нужен исключительно для игры по сети
         self.client = client
@@ -257,7 +258,7 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
         if falling_speed <= 70:
             return
         self.health -= (falling_speed - 70) // 2
-        Music().play_hurting_sound()
+        self.music.play_hurting_sound()
 
     def activate(self, mode: str, direction: str = None) -> None:
         """Активирует состояние. В случае передачи направления

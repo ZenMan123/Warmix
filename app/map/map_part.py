@@ -20,7 +20,7 @@ class MapPart(pygame.sprite.Sprite):
         self.rect.y = self.y * PART_OF_MAP_HEIGHT
 
 
-def create_map_part(x, y, level, symbol=None):
+def create_map_part(x, y, level, music, symbol=None):
     from .icon import Icon
     from .block import Block
     from .background import Background
@@ -28,7 +28,7 @@ def create_map_part(x, y, level, symbol=None):
     symbol = LEVELS[level][y][x] if symbol is None else symbol
     part_type = SCHEMA_LETTER_TO_TYPE[symbol]
     if part_type == 'icon':
-        return Icon(x, y, level, symbol)
+        return Icon(x, y, level, symbol, music)
     if part_type == 'block':
         return Block(x, y, level, symbol)
     if part_type == 'background':

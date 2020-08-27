@@ -10,9 +10,9 @@ import pygame
 
 
 class MeleeWarrior(BaseWarrior):
-    def __init__(self, login: str, warrior_name: str, camera: Camera, game: Game, init_side: str = 'right',
+    def __init__(self, login: str, warrior_name: str, camera: Camera, game: Game, music, init_side: str = 'right',
                  client: Client = None):
-        super().__init__(login, warrior_name, camera, game, init_side=init_side, client=client)
+        super().__init__(login, warrior_name, camera, game, music, init_side=init_side, client=client)
         self.conditions['attack']['attack_count'] = -1
 
     def _attack(self) -> None:

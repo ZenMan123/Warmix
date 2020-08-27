@@ -14,9 +14,9 @@ from ..screen_drawers.shooting_warrior_info import ShootingWarriorInfo
 
 
 class ShootingWarrior(BaseWarrior):
-    def __init__(self, login: str, warrior_name: str, camera: Camera, game: Game, init_side: str = 'right',
-                 client: Client = None):
-        super(ShootingWarrior, self).__init__(login, warrior_name, camera, game, init_side, client)
+    def __init__(self, login: str, warrior_name: str, camera: Camera, game: Game, music: Music,
+                 init_side: str = 'right', client: Client = None):
+        super(ShootingWarrior, self).__init__(login, warrior_name, camera, game, music, init_side, client)
 
         self.magazine_capacity = self.conditions['attack']['magazine_capacity'] = self.data["magazine_capacity"]
         self.reloading_speed = self.conditions['attack']['reloading_speed'] = self.data["reloading_speed"]
@@ -41,10 +41,10 @@ class ShootingWarrior(BaseWarrior):
         self.last_trying_to_shoot_time = time()
 
         if not self.bullets:
-            Music().play_empty_magazine_sound()
+            self.music.play_empty_magazine_sound()
             return
 
-        Music().play_bullet_shooting_sound()
+        self.music.play_bullet_shooting_sound()
         self.active_bullets.add(self.prepare_new_active_bullet())
 
     def update(self) -> None:

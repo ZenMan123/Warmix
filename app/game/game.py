@@ -15,8 +15,9 @@ pygame.init()
 
 
 class Game:
-    def __init__(self, warriors: Dict[str, pygame.sprite.Sprite], level: int):
+    def __init__(self, warriors: Dict[str, pygame.sprite.Sprite], level: int, music):
         self.level = level
+        self.music = music
 
         self.warriors = warriors
         self.map_tombstones_group = pygame.sprite.Group()
@@ -33,7 +34,7 @@ class Game:
         self.init_time = time()
 
     def create_map_part(self, x, y):
-        map_image = create_map_part(x, y, self.level)
+        map_image = create_map_part(x, y, self.level, self.music)
         if type(map_image) == Block:
             self.map_blocks_group.add(map_image)
         elif type(map_image) == Icon:

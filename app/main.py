@@ -1,5 +1,8 @@
+import json
+
 from app.configurations.warriors_configuration import WARRIOR_NAME_TO_TYPE
 from app.game.game import Game
+from app.menu.menu import MainMenu, SettingsMenu
 from app.screen_drawers.drawer import Drawer
 
 from app.services_for_game.camera import Camera
@@ -59,8 +62,8 @@ def main_game_cycle(warrior, game, drawer):
         drawer.draw()
 
 
-def set_game(level, warrior_name, login, client=None):
-    game = Game({}, level)
+def run_game(screen, level, warrior_name, login, music, client=None):
+    game = Game({}, level, music)
 
     if client:
         game_id = client.create_game()
@@ -74,14 +77,40 @@ def set_game(level, warrior_name, login, client=None):
         get_data_thread = GetDataThread(game, client)
         get_data_thread.start()
 
-    screen = pygame.display.set_mode(SCREEN_SIZE)
     camera = Camera()
 
-    main_warrior = WARRIOR_NAME_TO_TYPE[warrior_name](login, warrior_name, camera, game, client=client)
+    main_warrior = WARRIOR_NAME_TO_TYPE[warrior_name](login, warrior_name, camera, game, music, client=client)
     drawer = Drawer(screen, game, camera, main_warrior)
+    music.start()
 
-    return main_warrior, game, drawer
+    main_game_cycle(main_warrior, game, drawer)
 
 
-main_warrior, game, drawer = set_game(1, '2', 'artem')
-main_game_cycle(main_warrior, game, drawer)
+def run_menu():
+    menu = MainMenu(screen)
+    settings = SettingsMenu(screen, load_user_settings_conditions())
+    while True:
+        res = menu.run_menu()
+        if res == 'training':
+            conditions = load_user_settings_conditions()
+            music = True if conditions['music'] == 'music_on' else False
+            sound_effects = True if conditions['sound_effects'] == 'sound_effects_on' else False
+            run_game(screen, 1, conditions['warrior_name'], conditions['login'], Music(music, sound_effects))
+        if res == 'settings':
+            conditions = settings.run_menu()
+            save_user_settings_conditions(conditions)
+
+
+def save_user_settings_conditions(conditions):
+    with open('settings.json', 'w') as file:
+        json.dump(conditions, file)
+
+
+def load_user_settings_conditions():
+    with open('settings.json') as file:
+        return json.load(file)
+
+
+screen = pygame.display.set_mode(SCREEN_SIZE)
+run_menu()
+

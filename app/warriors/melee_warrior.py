@@ -15,6 +15,9 @@ class MeleeWarrior(BaseWarrior):
         super().__init__(login, warrior_name, camera, game, music, init_side=init_side, client=client)
         self.conditions['attack']['attack_count'] = -1
 
+        # Добавляем себя в список воинов
+        self.game.warriors[self.login] = self
+
     def _attack(self) -> None:
         if self.conditions['attack']['attack_count'] == ANIMATIONS_COUNT - 1:
             self.deactivate('attack')

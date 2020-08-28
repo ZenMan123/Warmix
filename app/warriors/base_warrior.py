@@ -33,9 +33,6 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
         # Более подробное описание можно посмотреть в методе update_modes
         self.modes_to_activate, self.modes_to_deactivate = [], []
 
-        # Добавляем себя в список воинов
-        self.game.warriors[self.login] = self
-
         # Загружаем информацию из json файлов о персонаже, а также анимации различных состояний
         load_features_data(self)
         set_mode_to_images_dict(self)

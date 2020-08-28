@@ -13,4 +13,5 @@ class GetDataThread(threading.Thread):
     def run(self):
         while True:
             data = self.client.receive_data()
+
             self.game.warriors[data[0]].update_modes(data[1:])

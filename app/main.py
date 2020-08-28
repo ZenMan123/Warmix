@@ -1,4 +1,5 @@
 import json
+from time import sleep
 
 from app.configurations.warriors_configuration import WARRIOR_NAME_TO_TYPE
 from app.game.game import Game
@@ -63,7 +64,7 @@ def main_game_cycle(warrior, game, drawer):
         drawer.draw()
 
 
-def run_game(screen, level, warrior_name, login, music, client=None, game_id=None):
+def run_game(screen, level, user_warrior_name, user_login, music, client=None, game_id=None):
     game = Game({}, level, music)
 
     if client:
@@ -79,17 +80,18 @@ def run_game(screen, level, warrior_name, login, music, client=None, game_id=Non
 
         for i in participants:
             login, warrior_name = i.split('-')
-            WARRIOR_NAME_TO_TYPE[warrior_name](login, warrior_name, Camera(), game, Music())
-        print('2')
+            if login != user_login:
+                WARRIOR_NAME_TO_TYPE[warrior_name](login, warrior_name, Camera(), game, Music())
+
         get_data_thread = GetDataThread(game, client)
         get_data_thread.start()
-        print('3')
+
     camera = Camera()
 
-    main_warrior = WARRIOR_NAME_TO_TYPE[warrior_name](login, warrior_name, camera, game, music, client=client)
+    main_warrior = WARRIOR_NAME_TO_TYPE[user_warrior_name](user_login, user_warrior_name, camera, game, music, client=client)
+    print(main_warrior.login)
     drawer = Drawer(screen, game, camera, main_warrior)
     music.start()
-    print('4')
     main_game_cycle(main_warrior, game, drawer)
 
 

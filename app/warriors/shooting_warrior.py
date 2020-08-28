@@ -29,9 +29,13 @@ class ShootingWarrior(BaseWarrior):
         self._reload_magazine()
 
         self.last_bullet_adding_time = time()
+        print(f'initialized {self.login} with last_bullet_adding_time')
         self.last_trying_to_shoot_time = time()
 
         self.info = ShootingWarriorInfo(self)
+
+        # Добавляем себя в список воинов
+        self.game.warriors[self.login] = self
 
     def _attack(self) -> None:
         self.deactivate('attack')

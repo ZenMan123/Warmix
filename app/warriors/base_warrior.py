@@ -348,12 +348,9 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
             self.conditions['jump']['just_finished'] = False  # Индикация того,
             # что мы не только что закончили прыгать. Важно, так как от этого зависит будем ли мы падать
 
-        # Если мы играем по сети, то отправляем данные на сервер, а затем сбрасываем значения
+        # Если мы играем по сети, то отправляем данные на сервер
         if self.client:
-            self.client.send_data(f'{self.login}${"".join(self.modes_to_activate)};'
-                                  f'{"".join(self.modes_to_deactivate)}${self.rect.x}_{self.rect.y}')
-            # Сбрасываем значения для активации и деактивации
-            self.modes_to_activate, self.modes_to_deactivate = [], []
+            self.client.send_data(f'{self.login}${";".join(modes)}${self.last_side}')
 
         # Выбираем режим, для которого будет рисоваться картинка и обновляем её
         mode = sorted(modes, key=lambda x: MODE_IMPORTANCE[x], reverse=True)[0]
@@ -362,7 +359,7 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
         # Настраиваем камеру
         self.camera.update(self)
 
-    def update_modes(self, modes_description) -> None:
+    def update_modes(self, modes, last_side) -> None:
         """Используется для игры по сети. Обновляет список активных состояний, после чего вызывает метод update.
         Имитирует нажатие клавиш на клавиатуре. То есть, на сервер от каждого игрока приходит описание действий,
         которые он совершил путём нажатия клавиш на клавиатуре. Каждый клиент, получая эти данные, преподносит их персонажу так,
@@ -376,40 +373,13 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
         'wla_x_y'
         """
 
-        # TODO сделать рефакторинг этого ужастного кода
-        activate_modes, deactivate_modes = modes_description[0].split(';')
-        position = modes_description[1].split('_')
-        self.rect.x, self.rect.y = int(position[0]), int(position[1])
-        if 'wl' in activate_modes:
-            self.activate('walk', 'left')
-        if 'wr' in activate_modes:
-            self.activate('walk', 'right')
-        if 'c' in activate_modes:
-            self.activate('collect')
-        if 'ru' in activate_modes:
-            self.activate('run')
-        if 'j' in activate_modes:
-            self.activate('jump')
-        if 'a' in activate_modes:
-            pos = activate_modes.find('a') + 1
-            res = 'a'
-            while pos < len(activate_modes):
-                symbol = activate_modes[pos]
-                if symbol.isdecimal() or symbol == '_':
-                    res += symbol
-                else:
-                    break
-            mode, x, y = res.split('_')
-            self.activate('attack')
-            self.change_last_side((x, y))
+        self.last_side = last_side
+        for mode in modes:
+            self.conditions[mode]['func']()
 
-        if 'wl' in deactivate_modes:
-            self.deactivate('walk', 'left')
-        if 'wr' in deactivate_modes:
-            self.deactivate('walk', 'right')
-        if 'ru' in deactivate_modes:
-            self.deactivate('run')
-        self.update()
+        # Выбираем режим, для которого будет рисоваться картинка и обновляем её
+        mode = sorted(modes, key=lambda x: MODE_IMPORTANCE[x], reverse=True)[0]
+        self._update_image(mode)
 
     def check_for_mode_presence(self, *modes) -> bool:
         """Проверяем наличие состояний"""

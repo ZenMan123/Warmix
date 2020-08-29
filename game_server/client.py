@@ -25,7 +25,7 @@ class Client:
 
     def send_data(self, data):
         print(data.split('$'))
-        if data.split('$')[1] != ';':
+        if data.split('$')[1]:
             self.sender.sendto(bytes(f'SEND_DATA%{self.login}%{self.game_id}%{data}', encoding='utf-8'),
                                self.server_address)
 

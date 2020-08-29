@@ -29,35 +29,26 @@ def main_game_cycle(warrior, game, drawer):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_a:
                     warrior.activate('walk', direction='left')
-                    warrior.modes_to_activate.append('wl')
                 if event.key == pygame.K_d:
                     warrior.activate('walk', direction='right')
-                    warrior.modes_to_activate.append('wr')
                 if event.key == pygame.K_e:
                     warrior.activate('collect')
-                    warrior.modes_to_activate.append('c')
                 if event.key == pygame.K_q:
                     warrior.activate('run')
-                    warrior.modes_to_activate.append('ru')
                 if event.key == pygame.K_SPACE:
                     warrior.activate('jump')
-                    warrior.modes_to_activate.append('j')
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 warrior.activate('attack')
                 warrior.change_last_side(event.pos)
-                warrior.modes_to_activate.append(f'a_{event.pos[0]}_{event.pos[1]}')
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_q:
                     warrior.deactivate('run')
-                    warrior.modes_to_deactivate.append('ru')
                 if event.key == pygame.K_a:
                     warrior.deactivate('walk', direction='left')
-                    warrior.modes_to_deactivate.append('wl')
                 if event.key == pygame.K_d:
                     warrior.deactivate('walk', direction='right')
-                    warrior.modes_to_deactivate.append('wr')
 
         clock.tick(FPS)
         game.update_objects()

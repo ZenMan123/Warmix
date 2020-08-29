@@ -98,14 +98,16 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
             }
         }
 
-    def _walk(self) -> None:
+    def _walk(self) -> bool:
         """Метод вызывается при ходьбе"""
         if self.check_for_mode_presence('run'):  # Если мы бежим, то мы не идём
-            return
+            return False
 
         self._change_pos_while_walking()
         if self._cancel_transporting():  # Проверка на столкновение
             self._change_pos_while_walking(-1)
+            return False
+        return True
 
     def _change_pos_while_walking(self, reverse=1) -> None:
         """Изменяем позицию во время ходьбы. Если параметр reverse = -1,
@@ -118,15 +120,17 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
         if self.last_side == RIGHT:
             self.rect.x += self.WALKING_SPEED * reverse
 
-    def _run(self) -> None:
+    def _run(self) -> bool:
         """Метод вызывается при беге"""
 
         if not self.check_for_mode_presence('walk'):  # Если мы не идём, то мы не можем бежать
-            return
+            return False
 
         self._change_pos_while_running()
         if self._cancel_transporting():  # Проверка на столкновение
             self._change_pos_while_running(-1)
+            return False
+        return True
 
     def _change_pos_while_running(self, reverse=1):
         """Изменяем позицию во время бега. Если параметр reverse = -1,
@@ -151,6 +155,8 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
             # Уменьшаем здоровье от падения и деактивируем состояние
             self.reduce_health_from_falling(self.conditions['fall']['falling_speed'])
             self.deactivate('fall', features_dict={'falling_speed': self.FALLING_ACCELERATION})
+            return False
+        return True
 
     def _change_pos_while_falling(self, collided_group: pygame.sprite.Group = None) -> None:
         """Обновляет позицию во время прыжка. В случае передачи группы спрайтов
@@ -162,14 +168,14 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
             self.rect.y += self.conditions['fall']['falling_speed']
             self.conditions['fall']['falling_speed'] += self.FALLING_ACCELERATION
 
-    def _jump(self) -> None:
+    def _jump(self) -> bool:
         """Метод вызывается во время прыжка.
         В случае, если мы падаем вниз, то мы не можем прыгать.
         В случае, если мы заканчиваем прыжок, то мы деактивируем соответствующее состояние"""
 
         if self.check_for_mode_presence('fall'):  # Проверка на падение
             self.deactivate('jump')
-            return
+            return False
 
         self._change_pos_while_jumping()  # Изменение координат
 
@@ -177,11 +183,13 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
         if self.conditions['jump']['jumping_count'] <= -(self.JUMPING_COUNT + 1):
             self.deactivate('jump', features_dict={'jumping_count': self.JUMPING_COUNT,
                                                    'just_finished': True})
-            return
+            return False
 
         res = self._cancel_transporting()  # Проверка на столкновение
         if res:
             self._change_pos_while_jumping(res)
+            return False
+        return True
 
     def _change_pos_while_jumping(self, collided_sprites: pygame.sprite.Group = None) -> None:
         """Изменяет позицию персонажа во время прыжка. В случае, если передается
@@ -211,9 +219,9 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
     def _idle(self) -> None:
         """Метод вызывается при "ничего не делании" персонажа"""
 
-        pass
+        return True
 
-    def _die(self) -> None:
+    def _die(self) -> bool:
         """Метод вызывается, когда здоровье персонажа становится неположительным.
         Если состояние die активировано, то никакие другие состояния не будут действовать.
         После исполнения анимации смерти, изображения героя сменится на значок могилы,
@@ -224,15 +232,18 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
             TombStone(self.rect, self.game)  # Создаём на нашем месте могилу
         else:
             self.conditions['die']['dying_count'] += 1
+        return True
 
-    def _hurt(self) -> None:
+    def _hurt(self) -> bool:
         """Метод вызывается когда игрок теряет здоровье от АТАКИ (не от падения),
         так как это будет выглядеть не очень"""
 
         if self.conditions['hurt']['hurting_count'] == ANIMATIONS_COUNT - 1:
             self.deactivate('hurt', features_dict={'hurting_count': -1})
+            return False
         else:
             self.conditions['hurt']['hurting_count'] += 1
+            return True
 
     def _collect(self) -> None:
         """Метод активируется при сборе предметов. В случае, если рядом находится предмет, то
@@ -341,8 +352,8 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
         else:
             for mode in self.conditions.keys():
                 if self.conditions[mode]['status']:
-                    self.conditions[mode]['func']()  # Если состояние активно, то оно действует
-                    modes.append(mode)
+                    if self.conditions[mode]['func']():  # Если состояние активно, то оно действует
+                        modes.append(mode)
 
             self.check_for_falling()  # Проверка на то, что мы падаем
             self.conditions['jump']['just_finished'] = False  # Индикация того,
@@ -374,6 +385,7 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
         """
 
         self.last_side = last_side
+        modes = modes.split(';')
         for mode in modes:
             self.conditions[mode]['func']()
 

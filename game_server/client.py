@@ -47,7 +47,6 @@ class Client:
             except socket.timeout:
                 continue
 
-
     def wait_for_game_id(self):
         while True:
             try:

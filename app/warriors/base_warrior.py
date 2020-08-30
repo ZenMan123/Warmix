@@ -361,16 +361,16 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
 
         # Выбираем режим, для которого будет рисоваться картинка и обновляем её
         mode = sorted(modes, key=lambda x: MODE_IMPORTANCE[x], reverse=True)[0]
-        self._update_image(mode)
+        frame_number = self._update_image(mode)
 
         # Если мы играем по сети, то отправляем данные на сервер
         if self.client:
-            self.client.send_data(f'{self.login}${mode}${self.last_side}${self.rect.x}_{self.rect.y}')
+            self.client.send_data(f'{self.login}${mode}${frame_number}${self.last_side}${self.rect.x}_{self.rect.y}')
 
         # Настраиваем камеру
         self.camera.update(self)
 
-    def update_modes(self, mode, last_side, pos) -> None:
+    def update_modes(self, mode, frame_number, last_side, pos) -> None:
         """Используется для игры по сети. Обновляет список активных состояний, после чего вызывает метод update.
         Имитирует нажатие клавиш на клавиатуре. То есть, на сервер от каждого игрока приходит описание действий,
         которые он совершил путём нажатия клавиш на клавиатуре. Каждый клиент, получая эти данные, преподносит их персонажу так,
@@ -387,6 +387,7 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
         print(mode, 'received')
         self.last_side = last_side
         self.rect.topleft = int(pos.split('_')[0]), int(pos.split('_')[1])
+        self.mode_to_frame_number[mode][self.last_side] = frame_number - 1
         self._update_image(mode)
 
     def check_for_mode_presence(self, *modes) -> bool:
@@ -415,13 +416,13 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
         self.activate('hurt')
         self.health -= damage
 
-    def _update_image(self, mode: str) -> None:
+    def _update_image(self, mode: str) -> int:
         """Обновляет картинку по заданному состоянию
         :param mode: Состояние
         :type mode: str
 
-        :return None
-        :rtype: None
+        :return Номер кадра в анимации
+        :rtype: int
         """
 
         if mode == 'fall':  # Картинка для падения и прыжка одна и та же
@@ -431,6 +432,7 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
         self.mode_to_frame_number[self.last_side][mode] = (self.mode_to_frame_number[self.last_side][
                                                                mode] + 1) % ANIMATIONS_COUNT
         self.image = self.mode_to_images[self.last_side][mode][self.mode_to_frame_number[self.last_side][mode]]
+        return self.mode_to_frame_number[self.last_side][mode]
 
     def __str__(self) -> str:
         result = [f'<Warrior> {self.warrior_name}', f'Здоровье: {self.health}, Урон: {self.power}',

@@ -359,18 +359,18 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
             self.conditions['jump']['just_finished'] = False  # Индикация того,
             # что мы не только что закончили прыгать. Важно, так как от этого зависит будем ли мы падать
 
-        # Если мы играем по сети, то отправляем данные на сервер
-        if self.client:
-            self.client.send_data(f'{self.login}${";".join(modes)}${self.last_side}')
-
         # Выбираем режим, для которого будет рисоваться картинка и обновляем её
         mode = sorted(modes, key=lambda x: MODE_IMPORTANCE[x], reverse=True)[0]
         self._update_image(mode)
 
+        # Если мы играем по сети, то отправляем данные на сервер
+        if self.client:
+            self.client.send_data(f'{self.login}${mode}${self.last_side}${self.rect.x}_{self.rect.y}')
+
         # Настраиваем камеру
         self.camera.update(self)
 
-    def update_modes(self, modes, last_side) -> None:
+    def update_modes(self, mode, last_side, pos) -> None:
         """Используется для игры по сети. Обновляет список активных состояний, после чего вызывает метод update.
         Имитирует нажатие клавиш на клавиатуре. То есть, на сервер от каждого игрока приходит описание действий,
         которые он совершил путём нажатия клавиш на клавиатуре. Каждый клиент, получая эти данные, преподносит их персонажу так,
@@ -384,13 +384,9 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
         'wla_x_y'
         """
 
+        print(mode, 'received')
         self.last_side = last_side
-        modes = modes.split(';')
-        for mode in modes:
-            self.conditions[mode]['func']()
-
-        # Выбираем режим, для которого будет рисоваться картинка и обновляем её
-        mode = sorted(modes, key=lambda x: MODE_IMPORTANCE[x], reverse=True)[0]
+        self.rect.topleft = int(pos.split('_')[0]), int(pos.split('_')[1])
         self._update_image(mode)
 
     def check_for_mode_presence(self, *modes) -> bool:

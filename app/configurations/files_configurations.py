@@ -32,11 +32,3 @@ BULLET_SHOOTING_NAME = 'bullet_shooting.wav'
 EMPTY_MAGAZINE_NAME = 'empty_magazine.wav'
 APPLE_EATING_NAME = 'apple_eating.wav'
 COLLECTING_SWORD_NAME = 'collect_sword.wav'
-
-
-def get_warrior_features_path(warrior_name: str) -> str:
-    return f'{PATH_TO_WARRIOR}/{warrior_name}/features.json'
-
-
-def get_warrior_photos_path(warrior_name: str, side: str, mode: str) -> str:
-    return f'{PATH_TO_WARRIOR}/{warrior_name}/photos/{mode}/{side}'

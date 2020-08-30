@@ -1,53 +1,29 @@
 import pygame
 
 from app.game.game import Game
+
 from app.configurations.size_configurations import PART_OF_MAP_HEIGHT, PART_OF_MAP_WIDTH, HEIGHT, ANIMATIONS_COUNT
+from app.configurations.modes_configuration import LEFT, RIGHT, MODE_IMPORTANCE
 
 from app.services_for_game.music import Music
 from app.services_for_game.camera import Camera
-from game_server.client import Client
 
-from .service_funcs import *
 from app.map.tombstone import TombStone
-
+from .abstract_warrior import AbstractWarrior
 from abc import ABC, abstractmethod
 
-from app.screen_drawers.base_warrior_info import BaseWarriorInfo
+from ..screen_drawers.base_warrior_info import BaseWarriorInfo
 
 
-class BaseWarrior(ABC, pygame.sprite.Sprite):
-    def __init__(self, login: str, warrior_name: str, camera: Camera, game: Game, music: Music,
-                 init_side: str = 'right', client: Client = None, real: bool = True):
-        super(BaseWarrior, self).__init__()
+class BaseWarrior(AbstractWarrior, ABC):
+    def __init__(self, login: str, warrior_name: str, camera: Camera, game: Game, music: Music):
+        super(AbstractWarrior, self).__init__(login, warrior_name, game)
+        super(ABC, self).__init__()
 
-        self.login = login  # Уникальный идентификатор игрока
-        self.warrior_name = warrior_name
         self.camera = camera
-        self.game = game
         self.music = music
-        self.real = real
-
-        # Этот атрибут нужен исключительно для игры по сети
-        self.client = client
-
-        # Для отправки сообщений на сервер о состоянии клавиатуры.
-        # Более подробное описание можно посмотреть в методе update_modes
-        self.modes_to_activate, self.modes_to_deactivate = [], []
-
-        # Загружаем информацию из json файлов о персонаже, а также анимации различных состояний
-        load_features_data(self)
-        set_mode_to_images_dict(self)
-        set_mode_to_frame_number_dict(self)
 
         self._set_conditions()  # Задаём словарь состояний и их параметры
-
-        # Задаём координаты и активное изображение
-        self.last_side = init_side
-        self.image: pygame.Surface = self.mode_to_images[self.last_side]['idle'][0]
-        self.rect: pygame.Rect = self.image.get_rect()
-        self.rect.x, self.rect.y = PART_OF_MAP_WIDTH, HEIGHT - self.rect.height - PART_OF_MAP_HEIGHT
-
-        # Для отображения основной информации
         self.info = BaseWarriorInfo(self)
 
     def _set_conditions(self) -> None:
@@ -219,8 +195,7 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
 
     def _idle(self) -> None:
         """Метод вызывается при "ничего не делании" персонажа"""
-
-        return True
+        return
 
     def _die(self) -> bool:
         """Метод вызывается, когда здоровье персонажа становится неположительным.
@@ -292,23 +267,6 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
 
         return pygame.sprite.spritecollide(self, self.game.map_blocks_group, False)
 
-    def _near_with_items(self) -> pygame.sprite.Group:
-        """Возвращает список задетых предметов
-        :return Список спрайтов
-        :rtype pygame.sprite.Group
-        """
-
-        return pygame.sprite.spritecollide(self, self.game.map_icons_group, False)
-
-    def change_last_side(self, pos) -> None:
-        """Меняет сторону, в которую будет смотреть персонаж в зависимости от направления атаки
-        :param pos: Позиция клика мышки
-        :return: None
-        """
-
-        delta_x, delta_y = self.camera.get_delta()  # Получаем сдвиг камеры для правильной обработки координат
-        self.last_side = LEFT if pos[0] - delta_x <= self.rect.x + self.rect.width / 2 else RIGHT
-
     def deactivate(self, mode: str, direction: str = None, features_dict: dict = {}) -> None:
         """Принимаем на вход состояние, которое надо отключить.
         В случае, если также передается параметр direction,
@@ -344,9 +302,6 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
         """Обновляет позицию персонажа исходя из активных состояний.
         В случае, если мы умираем, никакое состояние не исполняется"""
 
-        if not self.real:
-            return
-
         self.check_for_dying()  # Проверка на то, что мы умираем
         modes = []  # Здесь будет список активных состояний
 
@@ -364,35 +319,10 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
             # что мы не только что закончили прыгать. Важно, так как от этого зависит будем ли мы падать
 
         # Выбираем режим, для которого будет рисоваться картинка и обновляем её
-        mode = sorted(modes, key=lambda x: MODE_IMPORTANCE[x], reverse=True)[0]
-        frame_number = self._update_image(mode)
-
-        # Если мы играем по сети, то отправляем данные на сервер
-        if self.client:
-            self.client.send_data(f'{self.login}${mode}${frame_number}${self.last_side}${self.rect.x}_{self.rect.y}')
+        self._update_image(sorted(modes, key=lambda x: MODE_IMPORTANCE[x])[-1])
 
         # Настраиваем камеру
         self.camera.update(self)
-
-    def update_modes(self, mode, frame_number, last_side, pos) -> None:
-        """Используется для игры по сети. Обновляет список активных состояний, после чего вызывает метод update.
-        Имитирует нажатие клавиш на клавиатуре. То есть, на сервер от каждого игрока приходит описание действий,
-        которые он совершил путём нажатия клавиш на клавиатуре. Каждый клиент, получая эти данные, преподносит их персонажу так,
-        будто игрок физически нажал на эти клавиши, хотя сервер просто отправил список нажатых клавиш конкретного игрока.
-        Получается, игрок с другого устройства управляет персонажем на этом устройстве
-        data имеет вид '{user_login}%{modes_description}${end_pos}, modes_description имеет вид '{conditions};{conditions}.
-        end_pos имеет вид {pos_x}_{pos_y}, которое сообщяет конечное положения игрока (из-за запаздываний в сети нам нужна эта вешь)
-        conditions представляет из себя строку, состоящую из активируемых и деактивируемых действий.
-        wl - walk left, wr - walk right, c - collect, ru - run, j -jump, a_{pos_x}_{pos_y} - attack и позиция нажатия
-        Например, информация о том, что нам нужно активировать ходьбу налево и атаку в позиции (x, y) будет выглядеть так:
-        'wla_x_y'
-        """
-
-        print(mode, frame_number, 'received')
-        self.last_side = last_side
-        self.rect.topleft = int(pos.split('_')[0]), int(pos.split('_')[1])
-        self.mode_to_frame_number[self.last_side][mode] = int(frame_number) - 1
-        self._update_image(mode)
 
     def check_for_mode_presence(self, *modes) -> bool:
         """Проверяем наличие состояний"""
@@ -419,26 +349,3 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
     def receive_damage(self, damage):
         self.activate('hurt')
         self.health -= damage
-
-    def _update_image(self, mode: str) -> int:
-        """Обновляет картинку по заданному состоянию
-        :param mode: Состояние
-        :type mode: str
-
-        :return Номер кадра в анимации
-        :rtype: int
-        """
-
-        if mode == 'fall':  # Картинка для падения и прыжка одна и та же
-            mode = 'jump'
-
-        # Увеличиваем номер картинки в анимации и обновляем изображение
-        self.mode_to_frame_number[self.last_side][mode] = (self.mode_to_frame_number[self.last_side][
-                                                               mode] + 1) % ANIMATIONS_COUNT
-        self.image = self.mode_to_images[self.last_side][mode][self.mode_to_frame_number[self.last_side][mode]]
-        return self.mode_to_frame_number[self.last_side][mode]
-
-    def __str__(self) -> str:
-        result = [f'<Warrior> {self.warrior_name}', f'Здоровье: {self.health}, Урон: {self.power}',
-                  f'Позиция: {self.rect.x, self.rect.y}']
-        return '\n'.join(result)

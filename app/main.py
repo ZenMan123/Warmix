@@ -72,7 +72,7 @@ def run_game(screen, level, user_warrior_name, user_login, music, client=None, g
         for i in participants:
             login, warrior_name = i.split('-')
             if login != user_login:
-                WARRIOR_NAME_TO_TYPE[warrior_name](login, warrior_name, Camera(), game, Music())
+                WARRIOR_NAME_TO_TYPE[warrior_name](login, warrior_name, Camera(), game, Music(), real=False)
 
         get_data_thread = GetDataThread(game, client)
         get_data_thread.start()

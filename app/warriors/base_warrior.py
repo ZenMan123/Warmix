@@ -17,7 +17,7 @@ from app.screen_drawers.base_warrior_info import BaseWarriorInfo
 
 class BaseWarrior(ABC, pygame.sprite.Sprite):
     def __init__(self, login: str, warrior_name: str, camera: Camera, game: Game, music: Music,
-                 init_side: str = 'right', client: Client = None):
+                 init_side: str = 'right', client: Client = None, real: bool = True):
         super(BaseWarrior, self).__init__()
 
         self.login = login  # Уникальный идентификатор игрока
@@ -25,6 +25,7 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
         self.camera = camera
         self.game = game
         self.music = music
+        self.real = real
 
         # Этот атрибут нужен исключительно для игры по сети
         self.client = client
@@ -343,6 +344,9 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
         """Обновляет позицию персонажа исходя из активных состояний.
         В случае, если мы умираем, никакое состояние не исполняется"""
 
+        if not self.real:
+            return
+
         self.check_for_dying()  # Проверка на то, что мы умираем
         modes = []  # Здесь будет список активных состояний
 
@@ -384,10 +388,10 @@ class BaseWarrior(ABC, pygame.sprite.Sprite):
         'wla_x_y'
         """
 
-        print(mode, 'received')
+        print(mode, frame_number, 'received')
         self.last_side = last_side
         self.rect.topleft = int(pos.split('_')[0]), int(pos.split('_')[1])
-        self.mode_to_frame_number[mode][self.last_side] = frame_number - 1
+        self.mode_to_frame_number[self.last_side][mode] = int(frame_number) - 1
         self._update_image(mode)
 
     def check_for_mode_presence(self, *modes) -> bool:
